@@ -1,0 +1,64 @@
+---
+import type { Project } from '../data/projects';
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+---
+
+{
+  project.image ? (
+    <div class="product-shot" aria-hidden="true">
+      <img
+        class="product-shot__img"
+        src={project.image}
+        alt={project.imageAlt ?? `${project.title} - project visual`}
+        loading="lazy"
+        width="1920"
+        height="1080"
+      />
+      <div class="product-shot__ghost">
+        <img
+          class="product-shot__ghost-img"
+          src={project.image}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          width="1920"
+          height="1080"
+        />
+      </div>
+    </div>
+  ) : (
+    <span class="selected-work__visual-fallback" aria-hidden="true" />
+  )
+}
+
+<style>
+  .product-shot {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 1rem;
+    background: #030303;
+  }
+
+  /* Ghost: smaller copy that appears on hover - shared styles in global.css */
+  /* Hover state handled by parent component */
+
+  .selected-work__visual-fallback {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 1rem;
+    background: #030303;
+  }
+</style>

@@ -1,0 +1,93 @@
+---
+interface Props {
+  firstName: string;
+  lastName: string;
+}
+
+const { firstName, lastName } = Astro.props;
+---
+
+<h1 class="hero-name" aria-label={`${firstName} ${lastName}`}>
+  <span class="hero-name__line hero-name__line--first" aria-hidden="true">{firstName}</span>
+  <span class="hero-name__line hero-name__line--last" aria-hidden="true">{lastName}</span>
+</h1>
+
+<style>
+  .hero-name {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    overflow: visible;
+    pointer-events: none;
+    font-family: var(--font-display);
+    font-size: clamp(3.5rem, 15vw, 5.75rem);
+    font-weight: 700;
+    line-height: 0.76;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .hero-name__line {
+    position: absolute;
+    display: block;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-size: inherit;
+    font-weight: 700;
+    animation: reveal-name 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .hero-name__line--first {
+    top: 8%;
+    left: -1%;
+    z-index: 1;
+    color: var(--color-paper);
+  }
+
+  .hero-name__line--last {
+    top: 21%;
+    left: 5%;
+    z-index: 2;
+    color: var(--color-accent);
+    animation-delay: 120ms;
+  }
+
+  @keyframes reveal-name {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .hero-name {
+      inset: auto auto auto -0.02em;
+      top: 9.3%;
+      width: max-content;
+      gap: 0;
+      font-size: clamp(180px, 21.67vw, 312px);
+      font-weight: 700;
+      line-height: 0.75;
+      letter-spacing: -0.01em;
+    }
+
+    .hero-name__line {
+      position: relative;
+      top: auto;
+      left: auto;
+      width: max-content;
+      font-family: var(--font-display);
+      font-size: clamp(180px, 21.67vw, 312px);
+      font-weight: 700;
+      transform: scaleX(0.71);
+      transform-origin: left top;
+    }
+
+    .hero-name__line--last {
+      margin-left: clamp(120px, 12.2vw, 180px);
+      margin-top: -0.1em;
+    }
+  }
+</style>

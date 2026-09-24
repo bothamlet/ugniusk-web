@@ -1,0 +1,68 @@
+<script>import '../scripts/custom-cursor';</script>
+
+<style is:global>
+  .site-cursor {
+    position: fixed;
+    z-index: 2147483647;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+    mix-blend-mode: difference;
+    transition: opacity 120ms ease-out;
+  }
+
+  .site-cursor--visible {
+    opacity: 1;
+  }
+
+  .site-cursor__dot,
+  .site-cursor__ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition:
+      opacity 300ms ease-out,
+      transform 300ms ease-out;
+  }
+
+  .site-cursor__dot {
+    width: 8px;
+    height: 8px;
+    background: #fff;
+  }
+
+  .site-cursor__ring {
+    width: 32px;
+    height: 32px;
+    border: 2px solid #d81b6a;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.25);
+  }
+
+  .site-cursor--hovering .site-cursor__dot {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(4);
+  }
+
+  .site-cursor--hovering .site-cursor__ring {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  html.custom-cursor-active,
+  html.custom-cursor-active * {
+    cursor: none !important;
+  }
+
+  @media (prefers-reduced-motion: reduce), (pointer: coarse) {
+    .site-cursor {
+      display: none !important;
+    }
+  }
+</style>

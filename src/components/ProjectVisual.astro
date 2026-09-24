@@ -1,0 +1,98 @@
+---
+interface Props {
+	src?: string;
+	alt: string;
+	eager?: boolean;
+	code: string;
+}
+
+const { src, alt, eager = false, code } = Astro.props;
+
+// Intrinsic dimensions of the shipped WebP assets - reserves layout space (no CLS).
+const IMAGE_DIMS: Record<string, { w: number; h: number }> = {
+	'/chap-card-full.webp': { w: 2560, h: 1440 },
+	'/jukdata-card.webp': { w: 2560, h: 1440 },
+	'/screenshots/this-site-card.webp': { w: 1440, h: 810 },
+	'/images/projects/jukdata-2.webp': { w: 2560, h: 699 },
+	'/images/projects/jukdata-3.webp': { w: 2560, h: 1342 },
+	'/screenshots/this-site-overview.webp': { w: 2560, h: 1288 },
+	'/screenshots/this-site-detail.webp': { w: 2560, h: 1291 },
+	'/images/projects/inner-council-card.webp': { w: 1920, h: 1080 },
+	'/images/projects/surface-runoff-card.webp': { w: 1920, h: 1080 },
+};
+
+const dims = src ? (IMAGE_DIMS[src] ?? { w: 1920, h: 1080 }) : undefined;
+---
+
+<div class="project-visual-full">
+  <div class="project-visual-inner">
+    {src ? (
+      <div class="project-visual-image">
+        <img
+          src={src}
+          alt={alt}
+          loading={eager ? 'eager' : 'lazy'}
+          decoding="async"
+          width={dims?.w}
+          height={dims?.h}
+        />
+      </div>
+    ) : (
+      <div class="project-visual-placeholder">
+        <span class="project-visual-code">{code}</span>
+      </div>
+    )}
+  </div>
+</div>
+
+<style>
+  /* SECOND VIEW - full-bleed visual */
+  .project-visual-full {
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+  }
+
+  .project-visual-inner {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .project-visual-image {
+    width: 100%;
+    line-height: 0;
+  }
+
+  .project-visual-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .project-visual-placeholder {
+    position: relative;
+    width: 100%;
+    min-height: clamp(26rem, 45vw, 42rem);
+    background:
+      radial-gradient(circle at 48% 37%, rgb(124 58 237 / 0.12), transparent 22%),
+      linear-gradient(145deg, #f5f3ef 0%, #e8e4de 55%, #f0ece6 100%);
+  }
+
+  .project-visual-placeholder::after {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.65'/%3E%3C/svg%3E");
+    content: '';
+    opacity: 0.06;
+  }
+
+  .project-visual-code {
+    position: absolute;
+    top: 1.25rem;
+    left: 1.5rem;
+    z-index: 1;
+    color: #07070725;
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    letter-spacing: 0.2em;
+  }
+</style>

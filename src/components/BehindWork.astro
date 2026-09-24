@@ -1,0 +1,62 @@
+---
+// "BEHIND THE WORK" - large bio text, dark background, no image
+---
+
+<section id="about" class="behind-work" aria-labelledby="behind-work-title">
+  <div class="behind-work__inner">
+    <p id="behind-work-title" class="behind-work__eyebrow" data-scramble="scroll">Behind the work</p>
+    <p class="behind-work__copy">
+      Ugnius Liberman is a data scientist, AI engineer, and photographer based in Kaunas, Lithuania. He builds systems that sit at the intersection of the visual and the technical - driven by curiosity, expression, utility.
+    </p>
+  </div>
+</section>
+
+<style>
+  .behind-work {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    background: #08090a;
+    color: #f4f3f0;
+    padding:
+      clamp(5rem, 10vw, 9rem)
+      clamp(1.5rem, 4vw, 4rem)
+      clamp(6rem, 12vw, 10rem);
+  }
+
+  .behind-work__inner {
+    width: min(100%, 100rem);
+    margin-inline: auto;
+  }
+
+  .behind-work__eyebrow {
+    margin: 0 0 clamp(2rem, 4vw, 3.5rem);
+    color: var(--color-accent);
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 1.5vw, 1.35rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+
+  .behind-work__copy {
+    margin: 0;
+    font-family: var(--font-reading);
+    font-size: clamp(1.5rem, 2.5vw, 2.5rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+    color: rgb(255 255 255 / 0.88);
+  }
+
+  @media (max-width: 767px) {
+    .behind-work {
+      padding-block: clamp(3rem, 8vw, 6rem) clamp(4rem, 8vw, 6rem);
+    }
+
+    .behind-work__copy {
+      font-size: clamp(1.35rem, 5.5vw, 2rem);
+      line-height: 1.3;
+    }
+  }
+</style>

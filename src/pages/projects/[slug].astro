@@ -1,0 +1,27 @@
+---
+import ProjectDetail from '../../components/ProjectDetail.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { projects, type Project } from '../../data/projects';
+import { site } from '../../data/site';
+
+export function getStaticPaths() {
+  return projects.map((project) => ({
+    params: { slug: project.slug },
+    props: { project },
+  }));
+}
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+---
+
+<BaseLayout
+  title={`${project.title} - ${site.name}`}
+  description={project.summary}
+  ogImage={project.ogImage ?? '/og-image.png'}
+>
+  <ProjectDetail project={project} />
+</BaseLayout>

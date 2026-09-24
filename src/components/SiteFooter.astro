@@ -1,0 +1,205 @@
+---
+interface SocialLink {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  name: string;
+  socials: readonly SocialLink[];
+}
+
+const { name, socials } = Astro.props;
+---
+
+<footer class="site-footer" aria-label="Site footer">
+  <div class="site-footer__top">
+    <h2 class="site-footer__headline" data-scramble="scroll">Find me.</h2>
+
+    <div class="site-footer__socials">
+      {socials.map((link, i) => (
+        <Fragment>
+          {i > 0 && <span class="site-footer__dot" aria-hidden="true">·</span>}
+          <a class="site-footer__social-link cursor-hover" href={link.href} target="_blank" rel="noreferrer">
+            {link.label === 'GitHub' && (
+              <svg class="site-footer__social-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 .7A11.5 11.5 0 0 0 8.36 23.1c.58.1.79-.25.79-.56v-2.23c-3.23.7-3.91-1.37-3.91-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.17.08 1.78 1.2 1.78 1.2 1.04 1.77 2.72 1.26 3.38.96.1-.75.41-1.26.74-1.55-2.58-.29-5.29-1.29-5.29-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18a10.95 10.95 0 0 1 5.76 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.58.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.72 5.39-5.31 5.68.42.36.79 1.07.79 2.16v3.25c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" />
+              </svg>
+            )}
+            {link.label === 'LinkedIn' && (
+              <svg class="site-footer__social-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M5.37 7.98H1.64V22h3.73V7.98ZM3.51 2A2.18 2.18 0 1 0 3.5 6.36 2.18 2.18 0 0 0 3.51 2ZM22.36 13.96c0-4.23-2.26-6.2-5.28-6.2a4.55 4.55 0 0 0-4.12 2.27V7.98H9.23V22h3.73v-6.94c0-1.83.35-3.61 2.62-3.61 2.24 0 2.27 2.1 2.27 3.73V22h3.73l.78-8.04Z" />
+              </svg>
+            )}
+            {link.label === 'Instagram' && (
+              <svg class="site-footer__social-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4.25" />
+                <circle cx="17.45" cy="6.65" r="1" fill="currentColor" stroke="none" />
+              </svg>
+            )}
+            <span data-scramble="scroll">{link.label}</span>
+          </a>
+        </Fragment>
+      ))}
+    </div>
+  </div>
+
+  <div class="site-footer__meta">
+    <span>&copy; 2026 {name}</span>
+  </div>
+
+  <div class="site-footer__brand" aria-hidden="true">
+    <div class="site-footer__brand-track">
+      <span class="site-footer__brand-name"><span>Ugnius</span> <span class="accent">Liberman</span></span>
+      <span class="site-footer__brand-name"><span>Ugnius</span> <span class="accent">Liberman</span></span>
+      <span class="site-footer__brand-name"><span>Ugnius</span> <span class="accent">Liberman</span></span>
+      <span class="site-footer__brand-name"><span>Ugnius</span> <span class="accent">Liberman</span></span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    background: #08090a;
+    color: #f4f3f0;
+    padding:
+      clamp(3rem, 6vw, 5rem)
+      clamp(1.5rem, 4vw, 4rem)
+      clamp(1rem, 2vw, 2rem);
+  }
+
+  .site-footer__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: min(100%, 120rem);
+    margin-inline: auto;
+    padding-bottom: clamp(2rem, 4vw, 3rem);
+    gap: 2rem;
+  }
+
+  .site-footer__headline {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .site-footer__socials {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+  }
+
+  .site-footer__dot {
+    color: rgb(255 255 255 / 0.3);
+    font-size: 1.2rem;
+  }
+
+  .site-footer__social-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #f4f3f0;
+    font-family: var(--font-reading);
+    font-size: clamp(1.1rem, 1.5vw, 1.4rem);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 200ms ease-out;
+  }
+
+  .site-footer__social-link:hover,
+  .site-footer__social-link:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .site-footer__social-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .site-footer__social-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    flex-shrink: 0;
+  }
+
+  .site-footer__meta {
+    width: min(100%, 120rem);
+    margin-inline: auto;
+    padding: clamp(1.5rem, 3vw, 2rem) 0;
+    border-top: 1px solid rgb(255 255 255 / 0.1);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: rgb(255 255 255 / 0.4);
+    text-transform: uppercase;
+  }
+
+  .site-footer__brand {
+    width: 100vw;
+    margin-left: calc(-1 * clamp(1.5rem, 4vw, 4rem));
+    overflow: hidden;
+    line-height: 0.78;
+    margin-top: clamp(0.75rem, 1.5vw, 1.5rem);
+  }
+
+  .site-footer__brand-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 12s linear infinite;
+  }
+
+  .site-footer__brand-name {
+    flex-shrink: 0;
+    padding-right: 0.3em;
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 9vw, 13rem);
+    font-weight: 900;
+    letter-spacing: -0.06em;
+    line-height: 0.82;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .site-footer__brand-name .accent {
+    color: var(--color-accent);
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-footer__brand-track {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .site-footer__top {
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .site-footer__headline {
+      font-size: clamp(2.5rem, 12vw, 4rem);
+    }
+
+    .site-footer__socials {
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+  }
+</style>

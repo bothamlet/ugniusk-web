@@ -1,0 +1,86 @@
+---
+// Site navbar - fixed, condensed, difference blend mode
+// Hidden on hero, appears after scrolling past it
+---
+
+<nav class="site-nav" aria-label="Main navigation">
+  <a class="site-nav__brand" href="/#top">Ugnius Liberman</a>
+  <ul class="site-nav__links">
+    <li><a class="site-nav__link" href="/#about">About</a></li>
+    <li><a class="site-nav__link" href="/#work">Selected Work</a></li>
+    <li><a class="site-nav__link" href="/#author">Author</a></li>
+  </ul>
+</nav>
+
+<script>import '../scripts/site-nav';
+</script>
+<style>
+  .site-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 2rem);
+    mix-blend-mode: difference;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 400ms ease;
+  }
+
+  .site-nav--visible {
+    opacity: 1;
+  }
+
+  .site-nav__brand,
+  .site-nav__links {
+    pointer-events: auto;
+  }
+
+  .site-nav__brand {
+    font-family: var(--font-display);
+    font-size: clamp(0.65rem, 0.9vw, 0.8rem);
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: #fff;
+    text-decoration: none;
+    line-height: 1;
+  }
+
+  .site-nav__links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: clamp(1rem, 2.5vw, 2.5rem);
+  }
+
+  .site-nav__link {
+    font-family: var(--font-mono);
+    font-size: clamp(0.6rem, 0.8vw, 0.7rem);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #fff;
+    text-decoration: none;
+    line-height: 1;
+    transition: opacity 200ms ease;
+  }
+
+  .site-nav__link:hover {
+    opacity: 0.6;
+  }
+
+  @media (pointer: coarse) {
+    .site-nav {
+      mix-blend-mode: normal;
+      background: rgba(3, 3, 3, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+  }
+</style>

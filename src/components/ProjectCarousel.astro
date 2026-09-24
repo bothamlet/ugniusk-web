@@ -1,0 +1,224 @@
+---
+import type { Project } from '../data/projects';
+import ProjectCardVisual from './ProjectCardVisual.astro';
+
+interface Props {
+  projects: Project[];
+}
+
+const { projects } = Astro.props;
+
+const selectedProjects = projects;
+---
+
+<section id="work" class="selected-work" aria-labelledby="selected-work-title">
+  <header class="selected-work__header">
+    <h2 id="selected-work-title" class="selected-work__title" data-scramble="scroll">Selected Work</h2>
+  </header>
+
+  <div class="selected-work__grid">
+    {
+      selectedProjects.map((project) => {
+        const Tag = project.noPage ? 'span' : 'a';
+        const linkProps = project.noPage
+          ? { class: 'selected-work__link' }
+          : { class: 'selected-work__link cursor-hover', href: `/projects/${project.slug}/` };
+        return (
+          <article class="selected-work__item">
+            <Tag {...linkProps}>
+              <ProjectCardVisual project={project} />
+              <span class="selected-work__meta">
+                <strong class="selected-work__name" data-scramble="scroll">{project.title}</strong>
+                <span class="selected-work__right">
+                  <span class="selected-work__discipline" data-scramble="scroll">{project.discipline}</span>
+                  <span class="selected-work__year" data-scramble="scroll">{project.year}</span>
+                </span>
+              </span>
+            </Tag>
+          </article>
+        );
+      })
+    }
+  </div>
+</section>
+
+<style>
+  .selected-work {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-cream);
+    color: #030303;
+    padding:
+      clamp(4rem, 8vw, 8rem)
+      clamp(1.5rem, 4vw, 4rem)
+      clamp(5rem, 10vw, 9rem);
+  }
+
+  .selected-work__header {
+    width: min(100%, 120rem);
+    margin-inline: auto;
+    margin-bottom: clamp(3rem, 6vw, 5rem);
+  }
+
+  .selected-work__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 2vw, 1.75rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  .selected-work__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(2rem, 4vw, 3.5rem);
+    width: min(100%, 120rem);
+    margin-inline: auto;
+  }
+
+  .selected-work__item {
+    width: 100%;
+    transition: scale 500ms cubic-bezier(0.16, 0.8, 0.2, 1);
+  }
+
+  .selected-work__item:hover {
+    scale: 0.97;
+  }
+
+  .selected-work__item:nth-child(odd):last-child {
+    grid-column: 1;
+  }
+
+  .selected-work__link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .selected-work__link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 0.5rem;
+  }
+
+  .selected-work__visual,
+  .product-shot,
+  .selected-work__visual-fallback {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 1rem;
+  }
+
+  .selected-work__item:hover :global(.product-shot__ghost) {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .selected-work__item:hover :global(.product-shot__img) {
+    opacity: 0.4;
+  }
+
+  .selected-work__visual-fallback {
+    background: #030303;
+  }
+
+  .selected-work__meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.25rem 1rem;
+    margin-top: 1rem;
+    padding-inline: 0.125rem;
+  }
+
+  .selected-work__name {
+    color: #030303;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .selected-work__right {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .selected-work__type {
+    width: 100%;
+    text-align: right;
+    color: #5b5b56;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+  }
+
+  .selected-work__discipline {
+    color: #5b5b56;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+
+  .selected-work__year {
+    color: #6b6b66;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: clamp(0.9rem, 1.2vw, 1rem);
+    line-height: 1.2;
+  }
+
+  .selected-work__year::before {
+    content: '·';
+    margin-right: 0.5rem;
+    color: #b9b9b4;
+  }
+
+  @media (max-width: 767px) {
+    .selected-work {
+      padding-block: clamp(3rem, 6vw, 5rem) clamp(4rem, 8vw, 6rem);
+    }
+
+    .selected-work__grid {
+      grid-template-columns: 1fr;
+      gap: clamp(2.5rem, 6vw, 4rem);
+    }
+
+    .selected-work__item:nth-child(odd):last-child {
+      grid-column: auto;
+    }
+
+    .selected-work__meta {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .selected-work__right {
+      text-align: left;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .selected-work__item {
+      transition-duration: 0.01ms;
+    }
+    .product-shot__ghost,
+    .product-shot__img {
+      transition-duration: 0.01ms;
+    }
+  }
+</style>

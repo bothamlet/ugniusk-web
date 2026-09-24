@@ -1,0 +1,489 @@
+---
+import type { Project } from '../data/projects';
+import { projects } from '../data/projects';
+import { site } from '../data/site';
+import SiteFooter from './SiteFooter.astro';
+import ProjectVisual from './ProjectVisual.astro';
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+const relatedProjects = projects.filter(p => p.slug !== project.slug);
+
+const sectionByLabel = (label: string) =>
+  project.sections.find((section) => section.label === label);
+const overviewBody = sectionByLabel('Overview')?.body;
+const featuresBody = sectionByLabel('Key features')?.body;
+const technicalHeading = sectionByLabel('Technical')?.body;
+---
+
+<main class="project-page">
+  <article class="project-detail reveal-all">
+    <!-- First View: above the fold -->
+    <section class="project-first-view">
+      <div class="project-first-view__left">
+        <a class="project-back cursor-hover" href="/#projects">
+          <span aria-hidden="true">←</span>
+          <span>All projects</span>
+        </a>
+
+        <h1 class="project-title" data-scramble="scroll">{project.title}</h1>
+
+      </div>
+
+      <div class="project-first-view__right">
+        <p class="project-summary">{project.summary}</p>
+      </div>
+    </section>
+
+    <!-- Meta row - no dividers -->
+    <div class="project-meta-row">
+      <div class="project-meta-item">
+        <span class="project-meta-item__label">Type</span>
+        <span class="project-meta-item__value" data-scramble="scroll">{project.type}</span>
+      </div>
+      <div class="project-meta-item">
+        <span class="project-meta-item__label">Year</span>
+        <span class="project-meta-item__value" data-scramble="scroll">{project.year}</span>
+      </div>
+      <div class="project-meta-item">
+        <span class="project-meta-item__label">Stack</span>
+        <span class="project-meta-item__value" data-scramble="scroll">{project.stack.join(' · ')}</span>
+      </div>
+      <div class="project-meta-item">
+        <span class="project-meta-item__label">Status</span>
+        <span class="project-meta-item__value" data-scramble="scroll">{project.status}</span>
+      </div>
+    </div>
+
+    <!-- Second View: full-bleed project visual -->
+    <ProjectVisual src={project.image} alt={project.imageAlt ?? `${project.title} - project screenshot`} eager code={project.code} />
+
+    <!-- Three-column layout: content in left column -->
+    <section class="project-editorial">
+      <div class="project-editorial-spacer"></div>
+      <div class="project-editorial-content">
+        <span class="project-editorial-label" data-scramble="scroll">Overview</span>
+        <h2 class="project-editorial-heading">{project.reflection || project.summary}</h2>
+        <p class="project-editorial-body" set:html={overviewBody || project.summary}></p>
+        {featuresBody && (
+          <p class="project-editorial-body" set:html={featuresBody}></p>
+        )}
+      </div>
+    </section>
+
+    <!-- Second visual -->
+    <ProjectVisual src={project.gallery?.[1]} alt={project.galleryAlt?.[1] ?? `${project.title} - overview`} code={project.code} />
+
+    <!-- Second editorial - left column -->
+    <section class="project-editorial project-editorial--left">
+      <div class="project-editorial-content">
+        <span class="project-editorial-label" data-scramble="scroll">Technical</span>
+        {technicalHeading && (
+          <h2 class="project-editorial-heading" set:html={technicalHeading}></h2>
+        )}
+        {(project.technical || project.summary).split('\n\n').map((para) => (
+          <p class="project-editorial-body">{para}</p>
+        ))}
+      </div>
+      <div class="project-editorial-spacer"></div>
+    </section>
+
+    <!-- Third visual -->
+    <ProjectVisual src={project.gallery?.[2]} alt={project.galleryAlt?.[2] ?? `${project.title} - detail`} code={project.code} />
+
+    <!-- Third editorial - right column -->
+    <section class="project-editorial">
+      <div class="project-editorial-spacer"></div>
+      <div class="project-editorial-content">
+        <span class="project-editorial-label" data-scramble="scroll">Reflection</span>
+        <h2 class="project-editorial-heading">{project.reflectionTitle || `Built with ${project.stack.join(', ')}`}</h2>
+        {(project.reflectionBody || project.summary).split('\n\n').map((para) => (
+          <p class="project-editorial-body">{para}</p>
+        ))}
+      </div>
+    </section>
+
+    <!-- More Projects -->
+    <section class="project-more">
+      <h2 class="project-more__title" data-scramble="scroll">More Works</h2>
+      <div class="project-more__grid">
+        {relatedProjects.map((p) => (
+          <a class="project-more__card cursor-hover" href={`/projects/${p.slug}/`}>
+            <div class="project-more__img">
+              {p.image ? (
+                <>
+                  <img class="project-more__img-main" src={p.image} alt={p.title} loading="lazy" />
+                  <div class="project-more__img-ghost">
+                    <img src={p.image} alt="" aria-hidden="true" loading="lazy" />
+                  </div>
+                </>
+              ) : (
+                <div class="project-more__img-placeholder"></div>
+              )}
+            </div>
+            <h3 class="project-more__name">{p.title}</h3>
+            <span class="project-more__type">{p.type}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  </article>
+
+  <SiteFooter name={site.name} socials={site.socials} />
+</main>
+
+<style>
+  .project-page {
+    position: relative;
+    min-height: 100svh;
+    overflow-x: hidden;
+    background: #ffffff;
+    color: #070707;
+  }
+
+  .project-page::after {
+    position: fixed;
+    z-index: 0;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+    content: '';
+    opacity: 0.02;
+    pointer-events: none;
+  }
+
+  .project-detail {
+    position: relative;
+    z-index: 1;
+    width: min(calc(100% - 4rem), 92rem);
+    margin-inline: auto;
+    padding: clamp(1.5rem, 3vw, 2.5rem) 0 clamp(2rem, 4vw, 3.75rem);
+  }
+
+  /* ── Reveal animation ── */
+  .reveal-all > * {
+    animation: reveal-item 650ms cubic-bezier(0.16, 0.8, 0.2, 1) backwards;
+  }
+  .reveal-all > *:nth-child(1) { animation-delay: 200ms; }
+  .reveal-all > *:nth-child(2) { animation-delay: 330ms; }
+  .reveal-all > *:nth-child(3) { animation-delay: 460ms; }
+  .reveal-all > *:nth-child(4) { animation-delay: 590ms; }
+  .reveal-all > *:nth-child(5) { animation-delay: 720ms; }
+  .reveal-all > *:nth-child(6) { animation-delay: 850ms; }
+
+  @keyframes reveal-item {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ════════════════════════════════
+     FIRST VIEW - above the fold
+     ════════════════════════════════ */
+  .project-first-view {
+    display: grid;
+    grid-template-columns: 0.55fr 0.45fr;
+    gap: clamp(2rem, 5vw, 6rem);
+    align-items: end;
+    padding-top: clamp(1rem, 2vw, 1.5rem);
+    padding-bottom: clamp(1.25rem, 2.5vw, 2rem);
+  }
+
+  .project-first-view__left {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .project-back {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    color: #070707;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-decoration: none;
+    text-transform: uppercase;
+    margin-bottom: clamp(2rem, 4vw, 3rem);
+    transition: opacity 200ms ease-out;
+  }
+
+  .project-back span:first-child {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.9rem;
+    transition: transform 200ms ease-out;
+  }
+
+  .project-back:hover {
+    opacity: 0.5;
+  }
+
+  .project-back:hover span:first-child {
+    transform: translateX(-3px);
+  }
+
+  .project-back:focus-visible,
+  .project-back-bottom:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 5px;
+  }
+
+  /* ── Title ── */
+  .project-title {
+    margin: 0 0 clamp(3.5rem, 7vw, 6.5rem);
+    font-family: var(--font-display);
+    font-size: clamp(3.5rem, 7vw, 7.5rem);
+    font-weight: 900;
+    letter-spacing: -0.045em;
+    line-height: 0.92;
+    text-transform: uppercase;
+    color: #070707;
+  }
+
+  /* ── Details stacked below title ── */
+  .project-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    margin-top: clamp(2rem, 4vw, 3.5rem);
+  }
+
+  .project-detail-item {
+    font-family: var(--font-reading);
+    font-size: clamp(0.9rem, 1.2vw, 1.1rem);
+    line-height: 1.4;
+    color: #070707;
+  }
+
+  .project-detail-item:last-child {
+    color: #070707;
+  }
+
+  /* ── Summary on right ── */
+  .project-first-view__right {
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .project-summary {
+    margin: 0;
+    max-width: 30rem;
+    font-family: var(--font-reading);
+    font-size: clamp(1.05rem, 1.5vw, 1.4rem);
+    line-height: 1.4;
+    color: #111111;
+  }
+
+  /* ════════════════════════════════
+     META ROW - no dividers
+     ════════════════════════════════ */
+  .project-meta-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3rem;
+    padding: clamp(2.5rem, 4vw, 3.5rem) 0;
+    margin-top: clamp(1.5rem, 3vw, 2.5rem);
+  }
+
+  .project-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .project-meta-item:last-child {
+    padding-left: clamp(1.5rem, 3vw, 3rem);
+  }
+
+  .project-meta-item__label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: lowercase;
+    color: var(--color-accent);
+  }
+
+  .project-meta-item__value {
+    font-family: var(--font-display);
+    font-size: clamp(0.9rem, 1.3vw, 1.15rem);
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: #070707;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ════════════════════════════════
+     EDITORIAL - below visual
+     ════════════════════════════════ */
+  .project-editorial {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(2rem, 4vw, 4rem);
+    width: min(100%, 86rem);
+    margin-inline: auto;
+    padding: clamp(6rem, 10vw, 9rem) clamp(1.5rem, 4vw, 4rem) clamp(4rem, 7vw, 6rem);
+  }
+
+  .project-editorial-spacer {
+    /* left column - whitespace */
+  }
+
+  .project-editorial-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .project-editorial-label {
+    display: block;
+    margin-bottom: clamp(1rem, 2vw, 1.5rem);
+    font-family: var(--font-mono);
+    font-size: clamp(0.7rem, 0.9vw, 0.82rem);
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    color: var(--color-accent);
+    text-transform: uppercase;
+  }
+
+  .project-editorial-label::before {
+    content: '[';
+  }
+
+  .project-editorial-label::after {
+    content: ']';
+  }
+
+  .project-editorial-heading {
+    margin: 0 0 clamp(1.5rem, 3vw, 2.5rem);
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 3vw, 3rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: #070707;
+    max-width: 50ch;
+  }
+
+  .project-editorial-body {
+    margin: clamp(0.5rem, 1vw, 1rem) 0 0;
+    font-family: var(--font-mono);
+    font-size: clamp(0.9rem, 1.15vw, 1.05rem);
+    line-height: 1.65;
+    color: #1a1a1a;
+    max-width: 50ch;
+  }
+
+  .project-editorial-body strong {
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+
+  /* ════════════════════════════════
+     MORE PROJECTS
+     ════════════════════════════════ */
+  .project-more {
+    width: min(100%, 86rem);
+    margin-inline: auto;
+    padding: clamp(3rem, 6vw, 5rem) clamp(1.5rem, 4vw, 4rem);
+  }
+
+  .project-more__title {
+    margin: 0 0 clamp(2rem, 4vw, 3rem);
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    color: #070707;
+    line-height: 1;
+  }
+
+  .project-more__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+  }
+
+  .project-more__card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .project-more__card:hover .project-more__img-main {
+    opacity: 0.4;
+  }
+
+  .project-more__card:hover .project-more__img-ghost {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .project-more__img {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: #06060f;
+    margin-bottom: 1rem;
+  }
+
+  /* Ghost: smaller copy that appears on hover - shared styles in global.css */
+
+  .project-more__img-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #e8e4de 0%, #d8d4cc 100%);
+  }
+
+  .project-more__name {
+    margin: 0 0 0.25rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.2rem, 2vw, 1.6rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: #070707;
+    text-transform: uppercase;
+    line-height: 1.1;
+  }
+
+  .project-more__type {
+    font-family: var(--font-reading);
+    font-size: clamp(0.85rem, 1.1vw, 1rem);
+    color: #666666;
+    line-height: 1.3;
+  }
+
+  /* ════════════════════════════════
+     RESPONSIVE
+     ════════════════════════════════ */
+  @media (max-width: 900px) {
+    .project-first-view {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .project-first-view__right {
+      align-items: flex-start;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .project-detail {
+      width: min(calc(100% - 2rem), 92rem);
+    }
+
+    .project-title {
+      font-size: clamp(2.5rem, 13vw, 4.5rem);
+    }
+
+    .project-meta-row {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+    }
+  }
+</style>

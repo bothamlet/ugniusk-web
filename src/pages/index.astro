@@ -1,0 +1,92 @@
+---
+import Hero from '../components/Hero.astro';
+import BehindWork from '../components/BehindWork.astro';
+import ProjectCarousel from '../components/ProjectCarousel.astro';
+import HowIWork from '../components/HowIWork.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { projects } from '../data/projects';
+import { site } from '../data/site';
+---
+
+<BaseLayout title={`${site.name} - ${site.title}`} description={site.description}>
+  <div class="scroll-wrapper">
+    <Hero name={site.name} socials={site.socials} />
+    <div class="scroll-overlay">
+      <BehindWork />
+      <ProjectCarousel projects={projects} />
+      <HowIWork />
+      <section class="site-ender">
+        <p class="site-ender__text">Based on the original works of Ugnius <span class="site-ender__accent">Liberman</span></p>
+      </section>
+      <SiteFooter name={site.name} socials={site.socials} />
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  // Only use JS exit animation in browsers without native view transitions (Firefox)
+  if (!document.startViewTransition) {
+    document.querySelectorAll('.selected-work__link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = link.getAttribute('href');
+        if (!url) return;
+
+        const lenis = window.siteMotion?.lenis;
+        const scrollY = lenis ? lenis.scroll : window.scrollY;
+        if (lenis) lenis.stop();
+
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            document.body.style.transition = 'transform 450ms cubic-bezier(0.55, 0, 0.85, 0.25), opacity 450ms ease-in';
+            document.body.style.transform = 'translateY(-105vh)';
+            document.body.style.opacity = '0.4';
+            setTimeout(() => { window.location.href = url; }, 450);
+          });
+        });
+      });
+    });
+  }
+</script>
+
+<style>
+  .scroll-wrapper {
+    position: relative;
+  }
+
+  .scroll-overlay {
+    position: relative;
+    z-index: 1;
+  }
+
+  .site-ender {
+    position: relative;
+    z-index: 1;
+    background: #08090a;
+    padding-block: clamp(5rem, 10vw, 8rem) clamp(8rem, 16vw, 14rem);
+    padding-inline: clamp(1.5rem, 4vw, 4rem);
+    text-align: center;
+  }
+
+  .site-ender__text {
+    margin: 0 auto;
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 7rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    text-transform: uppercase;
+    color: #f4f3f0;
+    max-width: 22ch;
+  }
+
+  .site-ender__accent {
+    color: var(--color-accent);
+  }
+</style>

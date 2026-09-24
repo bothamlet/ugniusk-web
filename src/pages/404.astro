@@ -1,0 +1,112 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site';
+---
+
+<BaseLayout
+  title={`404 - Not found | ${site.name}`}
+  description={`This page doesn't exist - ${site.name}.`}
+>
+  <main class="not-found">
+    <div class="not-found__inner">
+      <p class="not-found__eyebrow" data-scramble="scroll">Error 404</p>
+      <h1 class="not-found__title" data-reveal data-reveal-direction="up">404</h1>
+      <p class="not-found__copy" data-reveal data-reveal-direction="up">
+        This page doesn't exist. It may have moved, or it was never here to begin
+        with.
+      </p>
+      <a class="not-found__link cursor-hover" href="/" data-reveal data-reveal-direction="up">
+        Back to the start
+      </a>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  /* Warm-editorial principles: paper ground, one accent, top-biased whitespace,
+     serif copy, no gradients, no chrome. */
+  .not-found {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100svh;
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  .not-found__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(100% - 4rem, 60rem);
+    padding: clamp(4rem, 8vw, 8rem);
+    text-align: center;
+  }
+
+  .not-found__eyebrow {
+    margin: 0 0 clamp(2rem, 4vw, 3rem);
+    color: var(--color-ink);
+    opacity: 0.55;
+    font-family: var(--font-mono);
+    font-size: clamp(0.7rem, 0.9vw, 0.85rem);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .not-found__title {
+    margin: 0 0 clamp(1.5rem, 3vw, 2.5rem);
+    font-family: var(--font-display);
+    font-size: clamp(4.5rem, 12vw, 10rem);
+    font-weight: 400;
+    letter-spacing: -0.045em;
+    line-height: 0.9;
+    color: var(--color-ink);
+  }
+
+  .not-found__copy {
+    max-width: 34rem;
+    margin: 0 0 clamp(2rem, 4vw, 3rem);
+    font-family: var(--font-reading);
+    font-size: clamp(1rem, 1.4vw, 1.25rem);
+    line-height: 1.55;
+    color: var(--color-ink);
+  }
+
+  .not-found__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--color-accent);
+    font-family: var(--font-display);
+    font-size: clamp(0.85rem, 1.1vw, 1rem);
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
+  .not-found__link::after {
+    content: '->';
+    font-family: var(--font-mono);
+    font-size: 0.8em;
+    transition: transform 200ms ease-out;
+  }
+
+  .not-found__link:hover::after {
+    transform: translateX(4px);
+  }
+
+  .not-found__link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 5px;
+  }
+
+  @media (max-width: 767px) {
+    .not-found__inner {
+      width: min(100% - 2rem, 60rem);
+    }
+
+    .not-found__title {
+      font-size: clamp(3.5rem, 16vw, 6rem);
+    }
+  }
+</style>

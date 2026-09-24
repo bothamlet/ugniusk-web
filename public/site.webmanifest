@@ -1,0 +1,26 @@
+{
+  "name": "Ugnius Liberman - Designer & developer",
+  "short_name": "Ugnius",
+  "description": "The portfolio and journal of Ugnius Liberman, a designer and developer creating thoughtful digital experiences.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030303",
+  "theme_color": "#030303",
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+---
+const {
+  delay = 0,
+  direction = 'up',
+  stagger = 0,
+  viewport = 85,
+  class: className,
+  as: Tag = 'div',
+  ...attributes
+} = Astro.props;
+---
+
+<Tag
+  {...attributes}
+  class={className}
+  data-reveal
+  data-reveal-delay={delay}
+  data-reveal-direction={direction}
+  data-reveal-stagger={stagger}
+  data-reveal-viewport={viewport}
+>
+  <slot />
+</Tag>
