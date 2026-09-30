@@ -59,7 +59,12 @@ const technicalHeading = sectionByLabel('Technical')?.body;
     </div>
 
     <!-- Second View: full-bleed project visual -->
-    <ProjectVisual src={project.image} alt={project.imageAlt ?? `${project.title} - project screenshot`} eager code={project.code} />
+    <ProjectVisual
+      src={project.gallery?.[0] ?? project.image}
+      alt={project.galleryAlt?.[0] ?? project.imageAlt ?? `${project.title} - project screenshot`}
+      eager
+      code={project.code}
+    />
 
     <!-- Three-column layout: content in left column -->
     <section class="project-editorial">

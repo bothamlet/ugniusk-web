@@ -249,6 +249,16 @@ const allProjects: Project[] = [
 		image: "/images/projects/surface-runoff-card.webp",
 		imageAlt:
 			"Surface Runoff Model - simulated water depth spreading across a digital elevation grid",
+		gallery: [
+			"/images/projects/surface-runoff-rain-storm.webp",
+			"/images/projects/surface-runoff-water-depth.webp",
+			"/images/projects/surface-runoff-soil-saturation.webp",
+		],
+		galleryAlt: [
+			"Rain intensity over the 50 by 50 metre grid, shown as a Gaussian storm moving across it",
+			"Water depth on a 3D surface plot of the terrain as runoff accumulates downslope",
+			"Soil saturation after infiltration, on a logarithmic scale, with unsaturated terrain untinted",
+		],
 		technical:
 			"The core is a fixed-timestep loop over a 50×50 grid. Rainfall is injected per cell from a Gaussian storm that moves deterministically across the terrain; infiltration is limited by both available surface water and remaining soil capacity, and saturation is hard-capped to keep floating-point overshoot out of the water balance. Each frame is rendered twice - once for water depth, once for soil saturation - then stitched into looping GIFs with imageio.",
 		reflection:
