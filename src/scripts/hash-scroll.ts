@@ -9,7 +9,16 @@ if (location.hash) {
 	};
 
 	const position = () => {
-		const el = document.querySelector(hash);
+		// getElementById, never querySelector: a fragment like "#2026" is not a
+		// valid CSS selector, and a throw here used to leave the page hidden for
+		// good (the visibility is cleared below, after this returns).
+		let id = hash.slice(1);
+		try {
+			id = decodeURIComponent(id);
+		} catch {
+			/* malformed percent-encoding - match the raw fragment instead */
+		}
+		const el = document.getElementById(id);
 		if (el) {
 			el.scrollIntoView();
 			reveal();
