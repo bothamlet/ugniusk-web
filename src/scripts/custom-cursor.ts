@@ -19,7 +19,11 @@ if (finePointer.matches && !reducedMotion.matches) {
 	let currentX = 0;
 	let currentY = 0;
 	let running = false;
-	const ease = 0.15;
+	// Follow time constant in seconds. This was a flat 0.15 per frame, which meant
+	// the cursor advanced only 15% of the remaining distance each frame: about
+	// 120ms to cover 90% of a flick, and twice that long on a 60Hz display.
+	const followTau = 0.02;
+	let lastTime = 0;
 
 	const interactiveSelector =
 		'a, button, [role="button"], input, select, textarea, .cursor-hover';
@@ -38,7 +42,13 @@ if (finePointer.matches && !reducedMotion.matches) {
 		}
 	};
 
-	const animate = () => {
+	const animate = (time: number) => {
+		// Frame-rate independent easing, so the cursor follows at the same rate on a
+		// 60Hz and a 120Hz display. Clamped in case frames were skipped.
+		const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.05) : 1 / 120;
+		lastTime = time;
+		const ease = 1 - Math.exp(-dt / followTau);
+
 		currentX += (targetX - currentX) * ease;
 		currentY += (targetY - currentY) * ease;
 
@@ -50,6 +60,7 @@ if (finePointer.matches && !reducedMotion.matches) {
 			currentY = targetY;
 			cursor.style.transform = `translate(${currentX}px, ${currentY}px)`;
 			running = false;
+			lastTime = 0;
 			return;
 		}
 
