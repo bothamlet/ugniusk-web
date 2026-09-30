@@ -12,52 +12,66 @@ declare global {
 }
 
 // Hero parallax - name shifts up + fades on scroll
+//
+// Viewport height is cached rather than read from the DOM on every scroll event:
+// reads mixed into the scroll path force style and layout work between frames.
 const setupHeroParallax = () => {
 	const heroName = document.querySelector<HTMLElement>(".hero-name");
 	if (!heroName) return;
 
-	const onScroll = () => {
-		const scrollY = window.scrollY || 0;
-		const heroHeight = window.innerHeight;
-		const progress = Math.min(scrollY / (heroHeight * 0.8), 1);
+	let viewportHeight = window.innerHeight;
 
+	const update = () => {
+		const progress = Math.min((window.scrollY || 0) / (viewportHeight * 0.8), 1);
 		heroName.style.transform = `translateY(${-progress * 60}px)`;
 		heroName.style.opacity = `${1 - progress * 0.6}`;
 	};
 
-	window.addEventListener("scroll", onScroll, { passive: true });
+	window.addEventListener("scroll", update, { passive: true });
+	window.addEventListener(
+		"resize",
+		() => {
+			viewportHeight = window.innerHeight;
+			update();
+		},
+		{ passive: true },
+	);
 };
 
 // Behind-work parallax depth
+//
+// The element and its document offset are resolved once (and again on resize),
+// instead of a getBoundingClientRect plus a querySelector per scroll event.
 const setupBehindParallax = () => {
 	const section = document.querySelector<HTMLElement>(".behind-work");
-	if (!section) return;
+	const inner = section?.querySelector<HTMLElement>(".behind-work__inner");
+	if (!section || !inner) return;
 
-	const observer = new IntersectionObserver(
-		(entries) => {
-			if (entries[0]?.isIntersecting && !section.dataset.parallaxReady) {
-				section.dataset.parallaxReady = "true";
+	let viewportHeight = window.innerHeight;
+	let sectionTop = 0;
 
-				const onScroll = () => {
-					const rect = section.getBoundingClientRect();
-					const progress = 1 - rect.top / window.innerHeight;
-					const clamped = Math.max(0, Math.min(1, progress));
+	const measure = () => {
+		viewportHeight = window.innerHeight;
+		sectionTop = section.getBoundingClientRect().top + window.scrollY;
+	};
 
-					const inner = section.querySelector<HTMLElement>(
-						".behind-work__inner",
-					);
-					if (inner) {
-						inner.style.transform = `translateY(${clamped * 20}px)`;
-					}
-				};
+	const update = () => {
+		const progress = 1 - (sectionTop - (window.scrollY || 0)) / viewportHeight;
+		const clamped = Math.max(0, Math.min(1, progress));
+		inner.style.transform = `translateY(${clamped * 20}px)`;
+	};
 
-				window.addEventListener("scroll", onScroll, { passive: true });
-			}
+	measure();
+	update();
+	window.addEventListener("scroll", update, { passive: true });
+	window.addEventListener(
+		"resize",
+		() => {
+			measure();
+			update();
 		},
-		{ threshold: 0 },
+		{ passive: true },
 	);
-
-	observer.observe(section);
 };
 
 // Footer marquee speed boost when in view
@@ -99,9 +113,10 @@ const initializeMotion = () => {
 	if (prefersReducedMotion.matches) return;
 
 	const lenis = new Lenis({
-		// Shorter than the original 0.85s: long smoothing is most of what makes
-		// the page feel like it lags behind the wheel.
-		duration: 0.6,
+		// The glide knob: 0.6 is snappy, 1.2 (Lenis's own default) is maximum
+		// glide. It reads as lag if the frame rate is not already clean, so this
+		// was lowered while the grain animation was dropping frames.
+		duration: 0.8,
 		easing: (time) => Math.min(1, 1.001 - 2 ** (-10 * time)),
 		smoothWheel: true,
 	});
