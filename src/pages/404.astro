@@ -7,7 +7,7 @@ import { site } from '../data/site';
   title={`404 - Not found | ${site.name}`}
   description={`This page doesn't exist - ${site.name}.`}
 >
-  <main class="not-found">
+  <main id="main" class="not-found">
     <div class="not-found__inner">
       <p class="not-found__eyebrow" data-scramble="scroll">Error 404</p>
       <h1 class="not-found__title" data-reveal data-reveal-direction="up">404</h1>
@@ -76,7 +76,7 @@ import { site } from '../data/site';
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
-    color: var(--color-accent);
+    color: var(--color-accent-deep);
     font-family: var(--font-display);
     font-size: clamp(0.85rem, 1.1vw, 1rem);
     letter-spacing: 0.02em;

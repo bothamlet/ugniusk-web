@@ -27,6 +27,11 @@
   --color-ink: #030303;
   --color-paper: #f4f3f0;
   --color-accent: #d81b6a;
+  /* Small accent text on the near-black grounds: #d81b6a lands at 4.1-4.2:1
+     there, below the 4.5:1 these sizes need. */
+  --color-accent-soft: #e0437f;
+  /* Accent text on paper/white, where #d81b6a is 4.4:1 on #f4f3f0. */
+  --color-accent-deep: #c2185b;
   --color-cream: #f7f7f5;
   --color-cream-fg: #070707;
   --font-display: "Archivo Black", Arial, Helvetica, sans-serif;

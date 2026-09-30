@@ -10,7 +10,7 @@ import { site } from '../data/site';
 ---
 
 <BaseLayout title={`${site.name} - ${site.title}`} description={site.description}>
-  <div class="scroll-wrapper">
+  <main id="main" class="scroll-wrapper">
     <Hero name={site.name} socials={site.socials} />
     <div class="scroll-overlay">
       <BehindWork />
@@ -21,7 +21,7 @@ import { site } from '../data/site';
       </section>
       <SiteFooter name={site.name} socials={site.socials} />
     </div>
-  </div>
+  </main>
 </BaseLayout>
 
 <script>
