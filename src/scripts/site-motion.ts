@@ -113,10 +113,9 @@ const initializeMotion = () => {
 	if (prefersReducedMotion.matches) return;
 
 	const lenis = new Lenis({
-		// The glide knob: 0.6 is snappy, 1.2 (Lenis's own default) is maximum
-		// glide. It reads as lag if the frame rate is not already clean, so this
-		// was lowered while the grain animation was dropping frames.
-		duration: 0.8,
+		// The glide knob. Higher means more inertia, which reads as lag between the
+		// wheel and the page; 0.4 keeps a slight ease without the delay.
+		duration: 0.4,
 		easing: (time) => Math.min(1, 1.001 - 2 ** (-10 * time)),
 		smoothWheel: true,
 	});
