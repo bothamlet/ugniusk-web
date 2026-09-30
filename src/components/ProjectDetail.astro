@@ -10,7 +10,12 @@ interface Props {
 }
 
 const { project } = Astro.props;
-const relatedProjects = projects.filter(p => p.slug !== project.slug);
+// More Works shows the two most recent projects. The sort is by year descending
+// and stable, so projects from the same year keep the order they are authored in.
+const relatedProjects = projects
+  .filter((p) => p.slug !== project.slug)
+  .sort((a, b) => Number(b.year) - Number(a.year))
+  .slice(0, 2);
 
 const sectionByLabel = (label: string) =>
   project.sections.find((section) => section.label === label);
