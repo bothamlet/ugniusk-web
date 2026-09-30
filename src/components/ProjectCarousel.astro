@@ -23,7 +23,15 @@ const selectedProjects = projects;
             <a class="selected-work__link cursor-hover" href={`/projects/${project.slug}/`}>
               <ProjectCardVisual project={project} />
               <span class="selected-work__meta">
-                <strong class="selected-work__name" data-scramble="scroll">{project.title}</strong>
+                <strong
+                  class:list={[
+                    "selected-work__name",
+                    project.title.length > 15 && "selected-work__name--long",
+                  ]}
+                  data-scramble="scroll"
+                >
+                  {project.title}
+                </strong>
                 <span class="selected-work__right">
                   <span class="selected-work__discipline" data-scramble="scroll">{project.discipline}</span>
                   <span class="selected-work__year" data-scramble="scroll">{project.year}</span>
@@ -130,6 +138,9 @@ const selectedProjects = projects;
     gap: 0.25rem 1rem;
     margin-top: 1rem;
     padding-inline: 0.125rem;
+    /* Reserve a full-size title's line box, so a title scaled down by
+       --long does not make its card shorter than the rest. */
+    min-height: calc(clamp(1.5rem, 2.5vw, 2.25rem) * 1.2);
   }
 
   .selected-work__name {
@@ -140,6 +151,13 @@ const selectedProjects = projects;
     letter-spacing: -0.02em;
     line-height: 1.2;
     text-transform: uppercase;
+  }
+
+  /* A long title pushes the type/year block onto a second line, which makes the
+     card taller than its neighbours and drops the description below the name.
+     Scale the title instead, so the meta stays on one row. */
+  .selected-work__name--long {
+    font-size: clamp(1.15rem, 1.7vw, 1.9rem);
   }
 
   .selected-work__right {
@@ -185,6 +203,10 @@ const selectedProjects = projects;
   @media (max-width: 767px) {
     .selected-work {
       padding-block: clamp(3rem, 6vw, 5rem) clamp(4rem, 8vw, 6rem);
+    }
+
+    .selected-work__meta {
+      min-height: 0;
     }
 
     .selected-work__grid {
