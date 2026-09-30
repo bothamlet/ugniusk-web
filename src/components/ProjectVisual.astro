@@ -18,9 +18,9 @@ const IMAGE_DIMS: Record<string, { w: number; h: number }> = {
 	'/screenshots/this-site-overview.webp': { w: 2560, h: 1288 },
 	'/screenshots/this-site-detail.webp': { w: 2560, h: 1291 },
 	'/images/projects/surface-runoff-card.webp': { w: 1920, h: 1080 },
-	'/images/projects/surface-runoff-rain-storm.webp': { w: 1400, h: 1308 },
-	'/images/projects/surface-runoff-water-depth.webp': { w: 1400, h: 1245 },
-	'/images/projects/surface-runoff-soil-saturation.webp': { w: 1400, h: 1304 },
+	'/images/projects/surface-runoff-rain-storm.webp': { w: 1400, h: 770 },
+	'/images/projects/surface-runoff-water-depth.webp': { w: 1400, h: 783 },
+	'/images/projects/surface-runoff-soil-saturation.webp': { w: 1400, h: 770 },
 };
 
 const dims = src ? (IMAGE_DIMS[src] ?? { w: 1920, h: 1080 }) : undefined;
@@ -54,8 +54,8 @@ const dims = src ? (IMAGE_DIMS[src] ?? { w: 1920, h: 1080 }) : undefined;
     margin-left: calc(-50vw + 50%);
     /* Hairlines top and bottom so a full-bleed visual reads as a framed band.
        Without them a visual with its own margins is just white space. */
-    border-top: 1px solid rgb(7 7 7 / 0.1);
-    border-bottom: 1px solid rgb(7 7 7 / 0.1);
+    border-top: 1px solid rgb(7 7 7 / 0.18);
+    border-bottom: 1px solid rgb(7 7 7 / 0.18);
   }
 
   .project-visual-inner {
