@@ -18,9 +18,8 @@ const lastName = lastNameParts.join(' ');
 ---
 
 <div class="hero-sticky">
+  <HeroName firstName={firstName} lastName={lastName} />
   <section class="hero-frame" aria-label={`${name} portfolio introduction`}>
-    <HeroName firstName={firstName} lastName={lastName} />
-
     <div class="hero-socials">
       <SocialLinks links={socials} />
     </div>

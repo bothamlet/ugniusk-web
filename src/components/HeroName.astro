@@ -13,14 +13,64 @@ const { firstName, lastName } = Astro.props;
 </h1>
 
 <script>
-  // Kick the wipe off only once the display font has loaded, so it runs over a
-  // line whose width is final. A slow font must not leave the name hidden, so
-  // there is a deadline as well as the promise.
+  // The hero name is sized to fill the width it sits in, and no more: the letters
+  // keep their form and their spacing, only the font size changes. It is measured
+  // rather than derived from a vw factor because the fit depends on the font's
+  // metrics and on the scrollbar, and because the name has to land inside the
+  // edge rather than across it.
   const heroName = document.querySelector<HTMLElement>(".hero-name");
+  const heroSticky = document.querySelector<HTMLElement>(".hero-sticky");
+  const heroLines = Array.from(
+    document.querySelectorAll<HTMLElement>(".hero-name__line"),
+  );
+
+  const fitHeroName = () => {
+    if (!heroName || !heroSticky || heroLines.length === 0) return;
+    const available = heroSticky.clientWidth;
+    if (!available) return;
+
+    heroName.style.fontSize = ""; // back to the stylesheet value to measure
+    const box = heroSticky.getBoundingClientRect();
+    let right = 0;
+    for (const line of heroLines) {
+      right = Math.max(right, line.getBoundingClientRect().right - box.left);
+    }
+    if (right <= 0) return;
+
+    const current = parseFloat(getComputedStyle(heroName).fontSize);
+    // Everything across the two lines scales with the font size (the indent is
+    // em, the condensing is a transform), so one measurement gives the fit.
+    // 0.5% short of the edge: the glyph ink of the last letter sits just inside
+    // its layout box, but the two are close enough on some renderers that a
+    // flush fit can shave the final letter.
+    let target = current * ((available * 0.995) / right);
+    // Never push the second line out of the bottom of the hero: the block is
+    // 1.40x the font size and starts 9.3% down.
+    target = Math.min(target, heroSticky.clientHeight * 0.55);
+    heroName.style.fontSize = `${target.toFixed(2)}px`;
+  };
+
   if (heroName) {
-    const reveal = () => heroName.classList.add("is-revealed");
+    // Kick the wipe off only once the display font has loaded, so it runs over a
+    // line whose width is final. A slow font must not leave the name hidden, so
+    // there is a deadline as well as the promise; whichever lands second re-fits
+    // against the real metrics.
+    const reveal = () => {
+      fitHeroName();
+      heroName.classList.add("is-revealed");
+    };
     document.fonts.ready.then(reveal);
     setTimeout(reveal, 2000);
+
+    let queued = 0;
+    window.addEventListener(
+      "resize",
+      () => {
+        cancelAnimationFrame(queued);
+        queued = requestAnimationFrame(fitHeroName);
+      },
+      { passive: true },
+    );
   }
 </script>
 
@@ -97,13 +147,11 @@ const { firstName, lastName } = Astro.props;
       top: 9.3%;
       width: max-content;
       gap: 0;
-      /* Sized to span the viewport width: at 21.67vw the two lines measure
-         101.6% edge to edge, which is the full-bleed the design already had at
-         1440px. The ceiling was 312px, which froze the name at roughly half the
-         width on a 2880px screen. The vh term only engages on screens so wide
-         and short that filling the width would push the second line off the
-         bottom: the block is 1.40x its font size and starts 9.3% down. */
-      font-size: min(21.67vw, 61vh);
+      /* Fallback for the no-JS case and for the first paint; the script below
+         measures and sets the exact size. The fit is 1 / 4.687 of the width for
+         Archivo Black, so ~21.3vw is flush; this sits just under that so the
+         name can never cross the edge before the script runs. */
+      font-size: min(21.1vw, 57vh);
       font-weight: 700;
       line-height: 0.75;
       letter-spacing: -0.01em;
