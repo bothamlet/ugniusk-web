@@ -30,11 +30,19 @@ const renderFrame = (
 		if (frame >= item.end) {
 			complete++;
 			fragment.append(item.to);
-		} else if (frame >= item.start) {
+		} else if (frame >= item.start && item.to !== " ") {
+			// Keep the real character in the flow, invisible, and overlay the symbol
+			// on top of it. The symbol is absolutely positioned, so it can never
+			// change the line's width or wrapping while the scramble runs.
 			const span = document.createElement("span");
 			span.className = "scramble-char";
-			span.textContent =
+			span.textContent = item.to;
+			const glyph = document.createElement("span");
+			glyph.className = "scramble-char__glyph";
+			glyph.setAttribute("aria-hidden", "true");
+			glyph.textContent =
 				SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+			span.append(glyph);
 			fragment.append(span);
 		} else {
 			fragment.append(item.from);
@@ -68,12 +76,6 @@ class TextScramble {
 		this.cancel();
 		this.playing = true;
 		this.frame = 0;
-		// Lock dimensions to prevent layout shift from different-width scramble chars
-		const rect = this.el.getBoundingClientRect();
-		this.el.style.minWidth = rect.width + "px";
-		this.el.style.minHeight = rect.height + "px";
-		this.el.style.overflow = "hidden";
-		this.el.style.fontKerning = "none";
 		this.update();
 	}
 
@@ -81,10 +83,6 @@ class TextScramble {
 		if (renderFrame(this.el, this.queue, this.frame)) {
 			this.playing = false;
 			this.el.textContent = this.originalText;
-			this.el.style.minWidth = "";
-			this.el.style.minHeight = "";
-			this.el.style.overflow = "";
-			this.el.style.fontKerning = "";
 		} else {
 			this.frameRequest = requestAnimationFrame(this.update);
 			this.frame++;
@@ -98,19 +96,9 @@ class TextScramble {
 }
 
 function initScramble() {
-	const style = document.createElement("style");
-	style.textContent = `
-    .scramble-char {
-      color: var(--color-accent) !important;
-      font-kerning: none;
-    }
-
-    [data-scramble] {
-      overflow-wrap: break-word;
-      word-break: break-word;
-    }
-  `;
-	document.head.append(style);
+	// Scrambling text is motion, so honour the preference before touching the DOM.
+	// (The CSS classes this used to inject now live in global.css.)
+	if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
 	const elements = document.querySelectorAll<HTMLElement>("[data-scramble]");
 

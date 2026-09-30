@@ -64,14 +64,70 @@ a {
   color: var(--color-paper);
 }
 
+/* Keyboard bypass for the fixed nav. Hidden until focused. */
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 2000;
+  padding: 0.6rem 0.85rem;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform 150ms ease-out;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* Text scramble (driven by scripts/text-scramble.ts). The real character holds
+   the width; the symbol is drawn on top of it, so the effect can never reflow or
+   overflow the line. Kept here rather than injected at runtime so `style-src`
+   does not need 'unsafe-inline'. */
+.scramble-char {
+  position: relative;
+  color: transparent;
+}
+
+.scramble-char__glyph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--color-accent);
+  font-kerning: none;
+}
+
+[data-scramble] {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* View-transition pseudo-elements are not matched by `*`, so the full-screen
+     slide would otherwise still run on every navigation. */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
   }
 }
 
