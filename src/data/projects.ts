@@ -31,35 +31,35 @@ const allProjects: Project[] = [
 		code: "UG-006",
 		title: "Today's Brief",
 		slug: "todays-brief",
-		discipline: "AI Engineering",
+		discipline: "Information Systems & Automation",
 		year: "2026",
 		summary:
-			"A newspaper that builds itself every morning - roughly twenty news feeds read overnight, clustered, filtered, and delivered to a phone before the day starts.",
-		type: "AI Engineering",
-		stack: ["Python", "DeepSeek", "SQLite", "Telegram Bot API"],
-		status: "Active",
+			"A personalised newspaper, assembled automatically every morning.",
+		type: "Information Systems & Automation",
+		stack: ["Python", "SQLite", "Telegram Bot API"],
+		status: "Finished",
 		technical:
-			"Ten steps run in sequence under one shell script: discovery, clustering, classification, tracking, coverage, then the beats - Europe, Sports, Stats, Lietuva, and Tech. Discovery reads a fixed roster of newsroom RSS feeds rather than an aggregator API, because a key-free feed cannot be rate limited, run out of quota, or silently decide an outlet does not exist. Clustering is deliberately lexical - titles are stopworded and merged on Jaccard similarity - so the model is only asked to judge, never to merge.\n\nDeepSeek classifies each headline for significance, and the coverage step calls it once per high-significance story to separate \"another day of the same war\" from \"the same story\". SQLite holds every story the pipeline has seen, which is the only way a briefing can say whether something is new or already on its third day.",
+			"RSS feeds provide the source material, lexical clustering groups related headlines, a language model handles significance and categorization, and SQLite tracks stories across days. A systemd timer runs the pipeline each morning, with retry and fallback logic for network or build failures.",
 		reflection:
-			"Today's Brief is a personal morning paper, assembled overnight and read on one phone - world news, the beats that matter, and coverage compared across the political spectrum.",
-		reflectionTitle: "A newspaper with one subscriber",
+			"Today's Brief turns a fixed set of news sources into a short daily edition built around what I actually want to follow.",
+		reflectionTitle: "Replacing the scroll",
 		reflectionBody:
-			"I wanted the thing I actually read in the morning to be something I had made, and to be honest about what it was. It runs on a timer on my laptop, so it only happens when the laptop is awake, and it reads only feeds that will still be there tomorrow.\n\nMost of what I learned was about the failure modes, not the features. DeepSeek reasons by default and bills that reasoning against the output budget, which quietly returned empty content on about 40% of calls until I turned thinking off - one production run misclassified seven of twelve articles. The morning the laptop woke at 07:02 with no network taught me that systemd's network-online target is satisfied at boot and means nothing after a resume. A failed run now delivers yesterday's paper with a warning rather than delivering nothing, because the one morning something breaks should not be the one morning with nothing to read.",
+			"Today's Brief started as a way to make reading the news feel deliberate again. I wanted one place for the things I actually care about - world news, Europe, Lietuva, tech, sports, and everything else I want to keep an eye on - without opening five different apps and letting each one decide what I should see next.\n\nThe automation matters because the whole point was effortlessness. I didn't want another system I had to maintain every morning. I wanted it to arrive already assembled, ready to read.\n\nI wanted it to replace the habit of opening Instagram or another feed first thing in the morning.",
 		sections: [
 			{
 				label: "Overview",
 				body:
-					"One issue a day, split into beats: <strong>World</strong>, <strong>Europe</strong>, <strong>Lietuva</strong>, <strong>Tech</strong>, <strong>Sports</strong>, <strong>Stats</strong>, <strong>Other</strong>, and <strong>For You</strong>. High-significance stories carry coverage from left, centre, and right outlets side by side, so the lean is visible rather than implied. Stories the pipeline has seen before are marked developing with the day they started.",
+					"Each issue is divided into <strong>World</strong>, <strong>Europe</strong>, <strong>Lietuva</strong>, <strong>Tech</strong>, <strong>Sports</strong>, and <strong>Other</strong>, with stories ranked by significance rather than recency. Developing stories carry across days, and major world stories can place coverage from different editorial leanings side by side.",
 			},
 			{
 				label: "Key features",
 				body:
-					"<strong>Significance filtering</strong>, so the paper is a shortlist and not a feed. <strong>Cross-lean coverage</strong> gathered from a fixed roster of two left, two centre, and two right outlets, matched locally on keywords. <strong>Story memory</strong> in SQLite for developing-story tracking. <strong>One self-contained file</strong> - stylesheet, scripts, data, and fonts inlined, so it opens offline from a chat with no server anywhere.",
+					"<strong>Complete system</strong> - source collection, clustering, classification, story tracking, cross-source coverage, rendering, and automatic Telegram delivery.",
 			},
 			{
 				label: "Technical",
 				body:
-					"Written in Python with no framework - each step reads one JSON file and writes the next, so any step can be resumed or rerun alone. The model client is one shared module, because five copies of the same POST meant five places to apply the same fix. The bundled paper is rendered to a front-page image for the notification itself, and delivered by a systemd timer that fires on the next wake if the machine was asleep at seven. A lock stops a manual run from interleaving with the scheduled one, and the files the page reads are snapshotted and restored together if a run fails part-way.",
+					"Built as a modular Python pipeline, with each stage reading and writing structured data so the briefing can be resumed from any point.",
 			},
 		],
 	},
