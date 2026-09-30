@@ -240,6 +240,9 @@ const allProjects: Project[] = [
 		type: "Mathematical Modeling",
 		stack: ["Python", "NumPy", "Plotly", "Matplotlib"],
 		status: "Completed",
+		image: "/images/projects/surface-runoff-card.webp",
+		imageAlt:
+			"Surface Runoff Model - simulated water depth spreading across a digital elevation grid",
 		technical:
 			"The core is a fixed-timestep loop over a 50×50 grid. Rainfall is injected per cell from a Gaussian storm that moves deterministically across the terrain; infiltration is limited by both available surface water and remaining soil capacity, and saturation is hard-capped to keep floating-point overshoot out of the water balance. Each frame is rendered twice - once for water depth, once for soil saturation - then stitched into looping GIFs with imageio.",
 		reflection:
