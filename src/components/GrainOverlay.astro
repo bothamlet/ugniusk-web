@@ -1,5 +1,11 @@
 ---
-// Animated film grain overlay - GPU-friendly with PNG texture
+// Film grain overlay - static texture.
+//
+// This used to animate the layer with a stepped transform. Measured while
+// scrolling, that animation halved the frame rate (33-50ms frames against 17ms
+// without it): a full-viewport composited layer invalidating on every step
+// competes with the compositor during scroll, for a shimmer that is barely
+// visible at 7% opacity.
 ---
 
 <div class="grain" aria-hidden="true"></div>
@@ -7,35 +13,12 @@
 <style>
   .grain {
     position: fixed;
-    inset: -100%;
-    width: 300%;
-    height: 300%;
+    inset: 0;
     z-index: 9999;
     pointer-events: none;
     opacity: 0.07;
     background-image: url('/images/grain.webp');
     background-repeat: repeat;
     background-size: 128px 128px;
-    animation: grain 8s steps(10) infinite;
-    will-change: transform;
-  }
-
-  @keyframes grain {
-    0%, 100% { transform: translate(0, 0); }
-    10% { transform: translate(-5%, -10%); }
-    20% { transform: translate(-15%, 5%); }
-    30% { transform: translate(7%, -25%); }
-    40% { transform: translate(-5%, 25%); }
-    50% { transform: translate(-15%, 10%); }
-    60% { transform: translate(15%, 0%); }
-    70% { transform: translate(0%, 15%); }
-    80% { transform: translate(3%, 35%); }
-    90% { transform: translate(-10%, 10%); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .grain {
-      animation: none;
-    }
   }
 </style>

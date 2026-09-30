@@ -99,7 +99,9 @@ const initializeMotion = () => {
 	if (prefersReducedMotion.matches) return;
 
 	const lenis = new Lenis({
-		duration: 0.85,
+		// Shorter than the original 0.85s: long smoothing is most of what makes
+		// the page feel like it lags behind the wheel.
+		duration: 0.6,
 		easing: (time) => Math.min(1, 1.001 - 2 ** (-10 * time)),
 		smoothWheel: true,
 	});
