@@ -18,6 +18,7 @@ if (finePointer.matches && !reducedMotion.matches) {
 	let targetY = 0;
 	let currentX = 0;
 	let currentY = 0;
+	let running = false;
 	const ease = 0.15;
 
 	const interactiveSelector =
@@ -30,6 +31,7 @@ if (finePointer.matches && !reducedMotion.matches) {
 	const handlePointerMove = (event: PointerEvent) => {
 		targetX = event.clientX;
 		targetY = event.clientY;
+		startFollowing();
 
 		if (!cursor.classList.contains("site-cursor--visible")) {
 			cursor.classList.add("site-cursor--visible");
@@ -39,10 +41,28 @@ if (finePointer.matches && !reducedMotion.matches) {
 	const animate = () => {
 		currentX += (targetX - currentX) * ease;
 		currentY += (targetY - currentY) * ease;
+
+		// Settle onto the pointer and stop. Previously this loop ran forever and
+		// wrote a transform every frame, even with the pointer motionless, which
+		// kept invalidating a top-most blending layer for no visual change.
+		if (Math.abs(targetX - currentX) < 0.1 && Math.abs(targetY - currentY) < 0.1) {
+			currentX = targetX;
+			currentY = targetY;
+			cursor.style.transform = `translate(${currentX}px, ${currentY}px)`;
+			running = false;
+			return;
+		}
+
 		cursor.style.transform = `translate(${currentX}px, ${currentY}px)`;
 		requestAnimationFrame(animate);
 	};
-	requestAnimationFrame(animate);
+
+	const startFollowing = () => {
+		if (running) return;
+		running = true;
+		requestAnimationFrame(animate);
+	};
+	startFollowing();
 
 	const isHoverBoundaryExit = (event: PointerEvent) => {
 		const target = event.target;
