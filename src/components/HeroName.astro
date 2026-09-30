@@ -12,6 +12,18 @@ const { firstName, lastName } = Astro.props;
   <span class="hero-name__line hero-name__line--last" aria-hidden="true">{lastName}</span>
 </h1>
 
+<script>
+  // Kick the wipe off only once the display font has loaded, so it runs over a
+  // line whose width is final. A slow font must not leave the name hidden, so
+  // there is a deadline as well as the promise.
+  const heroName = document.querySelector<HTMLElement>(".hero-name");
+  if (heroName) {
+    const reveal = () => heroName.classList.add("is-revealed");
+    document.fonts.ready.then(reveal);
+    setTimeout(reveal, 2000);
+  }
+</script>
+
 <style>
   .hero-name {
     position: absolute;
@@ -34,7 +46,22 @@ const { firstName, lastName } = Astro.props;
     font-family: var(--font-display);
     font-size: inherit;
     font-weight: 700;
-    animation: reveal-name 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    /* Hidden until the display font is ready. The wipe is a percentage of the
+       line's width, and the fallback font is a different width, so revealing
+       while the font swaps in makes the wipe jump. */
+    clip-path: inset(0 100% 0 0);
+  }
+
+  .hero-name.is-revealed .hero-name__line {
+    animation: reveal-name 900ms cubic-bezier(0.4, 0, 0.2, 1) both;
+    will-change: clip-path;
+  }
+
+  /* Without JS the name would stay clipped for good. */
+  @media (scripting: none) {
+    .hero-name__line {
+      clip-path: none;
+    }
   }
 
   .hero-name__line--first {
