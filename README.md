@@ -11,9 +11,9 @@ by hand, and the site ships no runtime dependencies beyond it.
 | | |
 | --- | --- |
 | Framework | Astro 6, static output |
-| Styling | Tailwind CSS v4, wired in through `@tailwindcss/vite` |
+| Styling | Hand-written CSS with custom properties - no framework |
 | Motion | Lenis for scroll, Anime.js for reveals, a custom blend-mode cursor and a text-scramble effect in plain TypeScript |
-| Type | Archivo Black and Roboto Condensed, loaded from Google Fonts |
+| Type | Archivo Black, self-hosted from `public/fonts/`; Georgia and Courier New as system fallbacks |
 | Language | TypeScript end to end |
 | Deploy | Vercel - security headers in `vercel.json`, Web Analytics and Speed Insights loaded through Vercel's first-party scripts rather than npm packages |
 
