@@ -6,6 +6,11 @@ interface Props {
 }
 
 const { project } = Astro.props;
+
+// The card is ~600px wide, so the full 2560px asset is wasted on a phone. The two
+// variants are generated once beside each asset; the full file stays as `src`.
+const cardSrcSet = (src: string) =>
+	`${src.replace(/\.webp$/, "-800.webp")} 800w, ${src.replace(/\.webp$/, "-1600.webp")} 1600w`;
 ---
 
 {
@@ -14,8 +19,11 @@ const { project } = Astro.props;
       <img
         class="product-shot__img"
         src={project.image}
+        srcset={cardSrcSet(project.image)}
+        sizes="(max-width: 767px) 92vw, 46vw"
         alt={project.imageAlt ?? `${project.title} - project visual`}
         loading="lazy"
+        decoding="async"
         width="1920"
         height="1080"
       />
@@ -23,9 +31,12 @@ const { project } = Astro.props;
         <img
           class="product-shot__ghost-img"
           src={project.image}
+          srcset={cardSrcSet(project.image)}
+          sizes="(max-width: 767px) 92vw, 46vw"
           alt=""
           aria-hidden="true"
           loading="lazy"
+          decoding="async"
           width="1920"
           height="1080"
         />
