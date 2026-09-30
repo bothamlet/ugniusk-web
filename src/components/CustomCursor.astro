@@ -10,7 +10,10 @@
     height: 0;
     opacity: 0;
     pointer-events: none;
-    mix-blend-mode: difference;
+    /* No `mix-blend-mode: difference`: blending a fixed top-most layer against the
+       whole page kept the document on a slow compositing path (together with the
+       nav's blend it measured 83ms per frame while scrolling, against 33ms with
+       both removed). The dot and ring carry their own contrast instead. */
     transition: opacity 120ms ease-out;
   }
 
@@ -35,6 +38,7 @@
     width: 8px;
     height: 8px;
     background: #fff;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.5);
   }
 
   .site-cursor__ring {
