@@ -258,6 +258,10 @@ const technicalHeading = sectionByLabel('Technical')?.body;
      first two words on one line. */
   .project-title--long {
     font-size: clamp(2.75rem, 5vw, 4.75rem);
+    /* The header bottom-aligns the summary, so the title's trailing space sets
+       the row height and pushes the summary down with it. A two-line title
+       needs less of that than a one-line one. */
+    margin-bottom: clamp(1.5rem, 3vw, 3rem);
   }
 
   /* ── Details stacked below title ── */
