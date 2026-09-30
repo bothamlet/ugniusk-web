@@ -29,7 +29,12 @@ const technicalHeading = sectionByLabel('Technical')?.body;
           <span>All projects</span>
         </a>
 
-        <h1 class="project-title" data-scramble="scroll">{project.title}</h1>
+        <h1
+          class:list={["project-title", project.title.length > 15 && "project-title--long"]}
+          data-scramble="scroll"
+        >
+          {project.title}
+        </h1>
 
       </div>
 
@@ -244,6 +249,15 @@ const technicalHeading = sectionByLabel('Technical')?.body;
     line-height: 0.92;
     text-transform: uppercase;
     color: #070707;
+  }
+
+  /* A long title breaks to three lines in the half-width column, which makes the
+     header ~200px taller than every other project. Scale it to settle at two,
+     the line count of the longest title that already fits. The max is capped so
+     the column, which stops growing at the container width, always fits the
+     first two words on one line. */
+  .project-title--long {
+    font-size: clamp(2.75rem, 5vw, 4.75rem);
   }
 
   /* ── Details stacked below title ── */
