@@ -17,15 +17,15 @@ const [firstName, ...lastNameParts] = name.split(' ');
 const lastName = lastNameParts.join(' ');
 ---
 
-<main class="hero-sticky" data-hero-fade>
-  <section class="hero-frame relative mx-auto min-h-[100svh] max-w-[120rem] overflow-hidden" aria-label={`${name} portfolio introduction`}>
+<div class="hero-sticky">
+  <section class="hero-frame" aria-label={`${name} portfolio introduction`}>
     <HeroName firstName={firstName} lastName={lastName} />
 
-    <div class="absolute inset-x-0 bottom-0 z-20 flex justify-end px-5 pb-8 sm:px-8 lg:px-12">
+    <div class="hero-socials">
       <SocialLinks links={socials} />
     </div>
   </section>
-</main>
+</div>
 
 <style>
   .hero-sticky {
@@ -35,6 +35,37 @@ const lastName = lastNameParts.join(' ');
     min-height: 100svh;
     overflow: hidden;
     background: var(--color-ink);
+  }
+
+  .hero-frame {
+    position: relative;
+    margin-inline: auto;
+    min-height: 100svh;
+    max-width: 120rem;
+    overflow: hidden;
+  }
+
+  .hero-socials {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 1.25rem 2rem;
+  }
+
+  @media (min-width: 640px) {
+    .hero-socials {
+      padding-inline: 2rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .hero-socials {
+      padding-inline: 3rem;
+    }
   }
 
   .hero-frame::after {
