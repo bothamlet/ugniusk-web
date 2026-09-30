@@ -1,3 +1,10 @@
+/**
+ * The editorial slots ProjectDetail.astro looks up by name. A union rather than
+ * `string`, so a typo or rename fails `astro check` instead of silently falling
+ * back to the project summary.
+ */
+export type SectionLabel = "Overview" | "Key features" | "Technical";
+
 export interface Project {
 	code: string;
 	title: string;
@@ -14,14 +21,13 @@ export interface Project {
 	ogImage?: string;
 	galleryAlt?: string[];
 	technical?: string;
-	noPage?: boolean;
 	/** Kept in the data but excluded site-wide: listings, page generation, sitemap. */
 	hidden?: boolean;
 	reflection: string;
 	reflectionBody?: string;
 	reflectionTitle?: string;
 	sections: {
-		label: string;
+		label: SectionLabel;
 		body: string;
 	}[];
 }

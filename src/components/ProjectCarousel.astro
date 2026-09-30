@@ -18,14 +18,9 @@ const selectedProjects = projects;
 
   <div class="selected-work__grid">
     {
-      selectedProjects.map((project) => {
-        const Tag = project.noPage ? 'span' : 'a';
-        const linkProps = project.noPage
-          ? { class: 'selected-work__link' }
-          : { class: 'selected-work__link cursor-hover', href: `/projects/${project.slug}/` };
-        return (
+      selectedProjects.map((project) => (
           <article class="selected-work__item">
-            <Tag {...linkProps}>
+            <a class="selected-work__link cursor-hover" href={`/projects/${project.slug}/`}>
               <ProjectCardVisual project={project} />
               <span class="selected-work__meta">
                 <strong class="selected-work__name" data-scramble="scroll">{project.title}</strong>
@@ -34,10 +29,9 @@ const selectedProjects = projects;
                   <span class="selected-work__year" data-scramble="scroll">{project.year}</span>
                 </span>
               </span>
-            </Tag>
+            </a>
           </article>
-        );
-      })
+      ))
     }
   </div>
 </section>
