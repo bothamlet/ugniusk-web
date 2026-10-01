@@ -12,6 +12,8 @@ export interface Project {
 	discipline: string;
 	year: string;
 	summary: string;
+	/** One-line classification for the card; the project page keeps `summary`. */
+	label: string;
 	type: string;
 	stack: string[];
 	status: string;
@@ -39,10 +41,11 @@ const allProjects: Project[] = [
 		code: "UG-006",
 		title: "Today's Brief",
 		slug: "todays-brief",
-		discipline: "Information Systems & Automation",
+		discipline: "Information Systems",
 		year: "2026",
 		summary:
 			"A personalised newspaper, assembled automatically every morning.",
+		label: "Personalised Daily Newspaper",
 		type: "Information Systems & Automation",
 		stack: ["Python", "SQLite", "Telegram Bot API"],
 		status: "Finished",
@@ -78,10 +81,11 @@ const allProjects: Project[] = [
 		code: "UG-001",
 		title: "This Site",
 		slug: "this-site",
-		discipline: "Web Design & Engineering",
+		discipline: "Web Design",
 		year: "2026",
 		summary:
 			"An ongoing experiment in what a personal site can be, based on the original works of Ugnius Liberman.",
+		label: "Experimental Personal Portfolio",
 		type: "Web Design & Engineering",
 		stack: ["Astro", "Anime.js", "Lenis", "Tailwind CSS"],
 		status: "Active",
@@ -126,6 +130,7 @@ const allProjects: Project[] = [
 		year: "2026",
 		summary:
 			"An Android budgeting app that automates entry while keeping you in full control.",
+		label: "Local-First Budgeting App",
 		type: "Mobile Development",
 		stack: ["Kotlin", "Jetpack Compose", "Room", "SQLCipher"],
 		status: "Paused",
@@ -157,10 +162,11 @@ const allProjects: Project[] = [
 		code: "UG-003",
 		title: "JUKdata",
 		slug: "jukdata",
-		discipline: "Web Design & Engineering",
+		discipline: "Web Design",
 		year: "2026",
 		summary:
 			"A fictional case study. A corporate website for an imaginary Lithuanian data solutions firm.",
+		label: "Data Consultancy Website",
 		type: "Web Design & Engineering",
 		stack: ["Next.js", "React", "TypeScript", "Tailwind CSS"],
 		status: "Completed",
@@ -210,6 +216,7 @@ const allProjects: Project[] = [
 		year: "2026",
 		summary:
 			"A private, local AI council - five personas built to argue, judge, and question one person. Fully offline, grounded in the literature that shapes each voice.",
+		label: "Offline AI Council",
 		type: "AI Engineering",
 		stack: ["Python", "Gemma 4", "ChromaDB", "KoboldCPP"],
 		status: "Active",
@@ -249,6 +256,7 @@ const allProjects: Project[] = [
 		year: "2025",
 		summary:
 			"A Python simulation of surface runoff across a digital elevation grid, using a diffusion wave model.",
+		label: "2D Water Flow Simulation",
 		type: "Mathematical Modeling",
 		stack: ["Python", "NumPy", "Plotly", "Matplotlib"],
 		status: "Completed",

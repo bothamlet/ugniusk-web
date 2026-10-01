@@ -23,18 +23,12 @@ const selectedProjects = projects;
             <a class="selected-work__link cursor-hover" href={`/projects/${project.slug}/`}>
               <ProjectCardVisual project={project} />
               <span class="selected-work__meta">
-                <strong
-                  class:list={[
-                    "selected-work__name",
-                    project.title.length > 15 && "selected-work__name--long",
-                  ]}
-                  data-scramble="scroll"
-                >
-                  {project.title}
-                </strong>
-                <span class="selected-work__right">
-                  <span class="selected-work__discipline" data-scramble="scroll">{project.discipline}</span>
-                  <span class="selected-work__year" data-scramble="scroll">{project.year}</span>
+                <strong class="selected-work__name" data-scramble="scroll">{project.title}</strong>
+                <span class="selected-work__descriptor">{project.label}</span>
+                <span class="selected-work__meta-line">
+                  <span data-scramble="scroll">{project.discipline}</span>
+                  <span class="selected-work__separator" aria-hidden="true">•</span>
+                  <span data-scramble="scroll">{project.year}</span>
                 </span>
               </span>
             </a>
@@ -130,17 +124,16 @@ const selectedProjects = projects;
     background: #030303;
   }
 
+  /* Three fixed rows per card: name, label + year, discipline. Each row owns its
+     font size, so no card is patched to fit - a long title wraps onto a second
+     line instead of shrinking. */
   .selected-work__meta {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.25rem 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
     margin-top: 1rem;
     padding-inline: 0.125rem;
-    /* Reserve a full-size title's line box, so a title scaled down by
-       --long does not make its card shorter than the rest. */
-    min-height: calc(clamp(1.5rem, 2.5vw, 2.25rem) * 1.2);
   }
 
   .selected-work__name {
@@ -153,60 +146,51 @@ const selectedProjects = projects;
     text-transform: uppercase;
   }
 
-  /* A long title pushes the type/year block onto a second line, which makes the
-     card taller than its neighbours and drops the description below the name.
-     Scale the title instead, so the meta stays on one row. */
-  .selected-work__name--long {
-    font-size: clamp(1.15rem, 1.7vw, 1.9rem);
+  /* One-line classification for the card, in the metadata typeface one step up
+     in size. The margin keeps it clear of the title, which it otherwise crowds
+     at this weight. The clamp is the guard for a future label that runs long: it
+     truncates at two lines instead of pushing the discipline line down. */
+  .selected-work__descriptor {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    min-height: 1.5em;
+    margin-top: 0.45rem;
+    color: #6f6a64;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    line-height: 1.5;
   }
 
-  .selected-work__right {
+  /* Classification only: one line, discipline and year separated by a dot. Flex
+     spacing rather than a margin on the dot: whitespace between flex items is
+     discarded, so the two gaps are equal. */
+  .selected-work__meta-line {
     display: flex;
     align-items: baseline;
-    gap: 0.5rem;
-    flex-shrink: 0;
-    text-align: right;
-  }
-
-  .selected-work__type {
-    width: 100%;
-    text-align: right;
-    color: #5b5b56;
+    gap: 0.45rem;
+    margin-top: 0.6rem;
+    color: #6f6a64;
     font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 500;
+    font-size: 0.812rem;
+    font-weight: 400;
     letter-spacing: 0.06em;
     line-height: 1.2;
+    white-space: nowrap;
   }
 
-  .selected-work__discipline {
-    color: #5b5b56;
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-  }
-
-  .selected-work__year {
-    color: #6b6b66;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: clamp(0.9rem, 1.2vw, 1rem);
-    line-height: 1.2;
-  }
-
-  .selected-work__year::before {
-    content: '·';
-    margin-right: 0.5rem;
-    color: #b9b9b4;
+  /* No tracking after the dot, and the discipline's trailing tracking (0.06em,
+     added after its last character) pulled back out, so both gaps measure equal. */
+  .selected-work__separator {
+    letter-spacing: 0;
+    margin-left: -0.06em;
   }
 
   @media (max-width: 767px) {
     .selected-work {
       padding-block: clamp(3rem, 6vw, 5rem) clamp(4rem, 8vw, 6rem);
-    }
-
-    .selected-work__meta {
-      min-height: 0;
     }
 
     .selected-work__grid {
@@ -216,15 +200,6 @@ const selectedProjects = projects;
 
     .selected-work__item:nth-child(odd):last-child {
       grid-column: auto;
-    }
-
-    .selected-work__meta {
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .selected-work__right {
-      text-align: left;
     }
   }
 
