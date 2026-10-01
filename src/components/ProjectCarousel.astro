@@ -24,11 +24,9 @@ const selectedProjects = projects;
               <ProjectCardVisual project={project} />
               <span class="selected-work__meta">
                 <strong class="selected-work__name" data-scramble="scroll">{project.title}</strong>
-                <span class="selected-work__descriptor">{project.label}</span>
-                <span class="selected-work__meta-line">
-                  <span data-scramble="scroll">{project.discipline}</span>
-                  <span class="selected-work__separator" aria-hidden="true">•</span>
-                  <span data-scramble="scroll">{project.year}</span>
+                <span class="selected-work__label-row">
+                  <span class="selected-work__descriptor">{project.label}</span>
+                  <span class="selected-work__year" data-scramble="scroll">{project.year}</span>
                 </span>
               </span>
             </a>
@@ -124,9 +122,9 @@ const selectedProjects = projects;
     background: #030303;
   }
 
-  /* Three fixed rows per card: name, label + year, discipline. Each row owns its
-     font size, so no card is patched to fit - a long title wraps onto a second
-     line instead of shrinking. */
+  /* Two fixed rows per card: name, then label and year. Each row owns its font
+     size, so no card is patched to fit - a long title wraps onto a second line
+     instead of shrinking. */
   .selected-work__meta {
     display: flex;
     flex-direction: column;
@@ -146,46 +144,45 @@ const selectedProjects = projects;
     text-transform: uppercase;
   }
 
+  /* Label, then the year at the far end. The gap is the minimum separation if a
+     long label ever reaches the year. */
+  .selected-work__label-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    width: 100%;
+    margin-top: 0.45rem;
+    letter-spacing: 0.06em;
+  }
+
   /* One-line classification for the card, in the metadata typeface one step up
-     in size. The margin keeps it clear of the title, which it otherwise crowds
-     at this weight. The clamp is the guard for a future label that runs long: it
-     truncates at two lines instead of pushing the discipline line down. */
+     in size. The clamp is the guard for a future label that runs long: it
+     truncates at two lines rather than wrapping the year out of the row. */
   .selected-work__descriptor {
     display: -webkit-box;
+    min-width: 0;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
     overflow: hidden;
     min-height: 1.5em;
-    margin-top: 0.45rem;
     color: #6f6a64;
     font-family: var(--font-mono);
     font-size: 0.95rem;
     line-height: 1.5;
   }
 
-  /* Classification only: one line, discipline and year separated by a dot. Flex
-     spacing rather than a margin on the dot: whitespace between flex items is
-     discarded, so the two gaps are equal. */
-  .selected-work__meta-line {
-    display: flex;
-    align-items: baseline;
-    gap: 0.45rem;
-    margin-top: 0.6rem;
+  .selected-work__year {
+    flex-shrink: 0;
+    /* Pushed to the end of the row, then inset from the card edge. */
+    margin-left: auto;
+    margin-right: 0.5rem;
     color: #6f6a64;
     font-family: var(--font-mono);
-    font-size: 0.812rem;
+    font-size: 0.95rem;
     font-weight: 400;
-    letter-spacing: 0.06em;
     line-height: 1.2;
     white-space: nowrap;
-  }
-
-  /* No tracking after the dot, and the discipline's trailing tracking (0.06em,
-     added after its last character) pulled back out, so both gaps measure equal. */
-  .selected-work__separator {
-    letter-spacing: 0;
-    margin-left: -0.06em;
   }
 
   @media (max-width: 767px) {

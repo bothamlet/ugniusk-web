@@ -9,7 +9,6 @@ export interface Project {
 	code: string;
 	title: string;
 	slug: string;
-	discipline: string;
 	year: string;
 	summary: string;
 	/** One-line classification for the card; the project page keeps `summary`. */
@@ -41,7 +40,6 @@ const allProjects: Project[] = [
 		code: "UG-006",
 		title: "Today's Brief",
 		slug: "todays-brief",
-		discipline: "Information Systems",
 		year: "2026",
 		summary:
 			"A personalised newspaper, assembled automatically every morning.",
@@ -81,7 +79,6 @@ const allProjects: Project[] = [
 		code: "UG-001",
 		title: "This Site",
 		slug: "this-site",
-		discipline: "Web Design",
 		year: "2026",
 		summary:
 			"An ongoing experiment in what a personal site can be, based on the original works of Ugnius Liberman.",
@@ -126,7 +123,6 @@ const allProjects: Project[] = [
 		code: "UG-002",
 		title: "Chap",
 		slug: "chap",
-		discipline: "Mobile Development",
 		year: "2026",
 		summary:
 			"An Android budgeting app that automates entry while keeping you in full control.",
@@ -162,7 +158,6 @@ const allProjects: Project[] = [
 		code: "UG-003",
 		title: "JUKdata",
 		slug: "jukdata",
-		discipline: "Web Design",
 		year: "2026",
 		summary:
 			"A fictional case study. A corporate website for an imaginary Lithuanian data solutions firm.",
@@ -212,7 +207,6 @@ const allProjects: Project[] = [
 		code: "UG-004",
 		title: "Inner Council",
 		slug: "inner-council",
-		discipline: "AI Engineering",
 		year: "2026",
 		summary:
 			"A private, local AI council - five personas built to argue, judge, and question one person. Fully offline, grounded in the literature that shapes each voice.",
@@ -252,7 +246,6 @@ const allProjects: Project[] = [
 		code: "UG-005",
 		title: "Surface Runoff Model",
 		slug: "surface-runoff",
-		discipline: "Mathematical Modeling",
 		year: "2025",
 		summary:
 			"A Python simulation of surface runoff across a digital elevation grid, using a diffusion wave model.",
