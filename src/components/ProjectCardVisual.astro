@@ -7,6 +7,9 @@ interface Props {
 
 const { project } = Astro.props;
 
+// Cards may ship their own visual; otherwise they reuse the project photo.
+const cardImage = project.cardImage ?? project.image;
+
 // The card is ~600px wide, so the full 2560px asset is wasted on a phone. The two
 // variants are generated once beside each asset; the full file stays as `src`.
 const cardSrcSet = (src: string) =>
@@ -14,12 +17,12 @@ const cardSrcSet = (src: string) =>
 ---
 
 {
-  project.image ? (
+  cardImage ? (
     <div class="product-shot" aria-hidden="true">
       <img
         class="product-shot__img"
-        src={project.image}
-        srcset={cardSrcSet(project.image)}
+        src={cardImage}
+        srcset={cardSrcSet(cardImage)}
         sizes="(max-width: 767px) 92vw, 46vw"
         alt={project.imageAlt ?? `${project.title} - project visual`}
         loading="lazy"
@@ -30,8 +33,8 @@ const cardSrcSet = (src: string) =>
       <div class="product-shot__ghost">
         <img
           class="product-shot__ghost-img"
-          src={project.image}
-          srcset={cardSrcSet(project.image)}
+          src={cardImage}
+          srcset={cardSrcSet(cardImage)}
           sizes="(max-width: 767px) 92vw, 46vw"
           alt=""
           aria-hidden="true"

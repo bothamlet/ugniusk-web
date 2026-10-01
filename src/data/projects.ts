@@ -16,6 +16,8 @@ export interface Project {
 	stack: string[];
 	status: string;
 	image?: string;
+	/** Card-only visual, when the card should not reuse the project photo. */
+	cardImage?: string;
 	gallery?: string[];
 	imageAlt?: string;
 	ogImage?: string;
@@ -128,8 +130,9 @@ const allProjects: Project[] = [
 		stack: ["Kotlin", "Jetpack Compose", "Room", "SQLCipher"],
 		status: "Paused",
 		image: "/chap-card-full.webp",
+		cardImage: "/chap-card.webp",
 		ogImage: "/og/chap-card-full.png",
-		imageAlt: "Chap - the budgeting app on an iPhone and MacBook, showing envelope balances on the dashboard",
+		imageAlt: "Chap - the app logo beside an iPhone showing an empty envelope dashboard",
 		technical:
 			"Data stays local-first and encrypted at rest, with Room running on a SQLCipher database and backups sealed with AES-GCM keys held in the Android Keystore. The CSV pipeline sniffs headers, stages drafts for human review, and auto-tags transactions through user-defined matching rules.\n\nEvery screen was implemented against a hand-made HTML mock that lives in the repo, so the visual contract is versioned like code.",
 		reflection:

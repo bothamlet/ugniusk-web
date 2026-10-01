@@ -128,11 +128,11 @@ const technicalHeading = sectionByLabel('Technical')?.body;
         {relatedProjects.map((p) => (
           <a class="project-more__card cursor-hover" href={`/projects/${p.slug}/`}>
             <div class="project-more__img">
-              {p.image ? (
+              {(p.cardImage ?? p.image) ? (
                 <>
-                  <img class="project-more__img-main" src={p.image} alt={p.title} loading="lazy" />
+                  <img class="project-more__img-main" src={p.cardImage ?? p.image} alt={p.title} loading="lazy" />
                   <div class="project-more__img-ghost">
-                    <img src={p.image} alt="" aria-hidden="true" loading="lazy" />
+                    <img src={p.cardImage ?? p.image} alt="" aria-hidden="true" loading="lazy" />
                   </div>
                 </>
               ) : (
