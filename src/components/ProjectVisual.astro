@@ -10,14 +10,14 @@ const { src, alt, eager = false, code } = Astro.props;
 
 // Intrinsic dimensions of the shipped WebP assets - reserves layout space (no CLS).
 const IMAGE_DIMS: Record<string, { w: number; h: number }> = {
-	'/chap-card-full.webp': { w: 2560, h: 1440 },
+	'/chap-card-full.webp': { w: 3840, h: 1920 },
 	'/jukdata-card.webp': { w: 2560, h: 1440 },
 	'/screenshots/this-site-card.webp': { w: 1440, h: 810 },
 	'/images/projects/jukdata-2.webp': { w: 2560, h: 699 },
 	'/images/projects/jukdata-3.webp': { w: 2560, h: 1342 },
 	'/screenshots/this-site-overview.webp': { w: 2560, h: 1288 },
 	'/screenshots/this-site-detail.webp': { w: 2560, h: 1291 },
-	'/images/projects/todays-brief-card.webp': { w: 1448, h: 814 },
+	'/images/projects/todays-brief-card.webp': { w: 3840, h: 2160 },
 	'/images/projects/surface-runoff-card.webp': { w: 894, h: 503 },
 	'/images/projects/surface-runoff-rain-storm.webp': { w: 1400, h: 770 },
 	'/images/projects/surface-runoff-water-depth.webp': { w: 1400, h: 783 },
