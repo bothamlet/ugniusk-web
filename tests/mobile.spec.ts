@@ -20,6 +20,9 @@ for (const width of [320, 390, 430]) {
         expect(item.right).toBeLessThanOrEqual(width);
         expect(item.clipped).toBe(false);
       }
+      const year = (await page.locator('.project-meta-item').nth(1).boundingBox())!;
+      const status = (await page.locator('.project-meta-item').nth(3).boundingBox())!;
+      expect(status.x - year.x - year.width).toBeLessThan(50);
       for (const content of await page.locator('.project-editorial-content').all()) {
         expect((await content.boundingBox())!.width).toBeGreaterThan(width - 80);
       }
@@ -46,6 +49,28 @@ for (const width of [320, 390, 430]) {
     }
     expect((await page.locator('.how-i-work__photo').boundingBox())!.height).toBeLessThan(640);
   });
+  test(`home: matching bio type and centered footer links at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/');
+    await page.evaluate(() => document.fonts.ready);
+    for (const pair of [['.behind-work__copy', '.how-i-work__copy'], ['.behind-work__eyebrow', '.how-i-work__eyebrow']]) {
+      const styles = await Promise.all(pair.map(selector => page.locator(selector).first().evaluate(element => {
+        const css = getComputedStyle(element);
+        return [css.fontFamily, css.fontSize, css.fontWeight, css.lineHeight];
+      })));
+      expect(styles[0]).toEqual(styles[1]);
+    }
+    const rows = new Map<number, { left: number; right: number }[]>();
+    for (const link of await page.locator('.site-footer__social-link').all()) {
+      const rect = (await link.boundingBox())!;
+      const y = Math.round(rect.y);
+      rows.set(y, [...(rows.get(y) || []), { left: rect.x, right: rect.x + rect.width }]);
+    }
+    for (const row of rows.values()) {
+      const center = (Math.min(...row.map(rect => rect.left)) + Math.max(...row.map(rect => rect.right))) / 2;
+      expect(Math.abs(center - width / 2)).toBeLessThan(1);
+    }
+  });
 }
 
 test('enlarged text keeps navigation and back link accessible', async ({ page }) => {
@@ -64,33 +89,17 @@ test('enlarged text keeps navigation and back link accessible', async ({ page })
   }
 });
 
-test('gallery opens original image, zooms, traps focus and closes', async ({ page }) => {
+test('gallery opens the original image without covering the project', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/projects/surface-runoff/');
-  const opener = page.locator('[data-image-viewer]').first();
-  await opener.focus();
+  const opener = page.locator('.project-visual-image').first();
   const source = await opener.getAttribute('href');
-  await opener.press('Enter');
-  const dialog = page.getByRole('dialog');
-  await expect(dialog).toBeVisible();
-  await expect(dialog.locator('img')).toHaveAttribute('src', new RegExp(source!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  await expect(page.getByRole('button', { name: 'Close image viewer' })).toBeFocused();
-  for (let index = 0; index < 12; index++) {
-    await page.keyboard.press('Tab');
-    expect(await dialog.evaluate(element => element.contains(document.activeElement))).toBe(true);
-  }
-  await page.waitForFunction(() => (document.querySelector('.image-viewer__image') as HTMLImageElement).naturalWidth > 0);
-  const fitted = (await dialog.locator('img').boundingBox())!.width;
-  await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
-  await expect.poll(async () => (await dialog.locator('img').boundingBox())!.width).toBeGreaterThan(fitted);
-  await expect.poll(async () => dialog.locator('.image-viewer__viewport').evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
-  await page.getByRole('button', { name: 'Fit image' }).click();
-  await expect.poll(async () => (await dialog.locator('img').boundingBox())!.width).toBeCloseTo(fitted, 0);
-  await expect(dialog.locator('a')).toHaveAttribute('href', new RegExp(source!.split('/').pop()!));
-  await page.keyboard.press('Escape');
-  await expect(dialog).not.toBeVisible();
-  await expect(opener).toBeFocused();
-  await expect(page.locator('html')).not.toHaveClass(/image-viewer-active/);
+  const [original] = await Promise.all([page.waitForEvent('popup'), opener.press('Enter')]);
+  await original.waitForLoadState();
+  expect(new URL(original.url()).pathname).toBe(source);
+  expect(await original.locator('img').evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(390);
+  await expect(page.locator('dialog')).toHaveCount(0);
+  await expect(page).toHaveURL(/projects\/surface-runoff/);
 });
 
 test('mobile anchor navigation clears the fixed header', async ({ page }) => {
@@ -125,5 +134,17 @@ test.describe('motion enabled on touch devices', () => {
     await expect(page).toHaveURL(/#author$/);
     const nav = (await page.locator('.site-nav').boundingBox())!;
     await expect.poll(async () => (await page.locator('#author').boundingBox())!.y).toBeCloseTo(nav.height + 16, 0);
+  });
+  test('footer ticker pauses off-screen and advances when visible', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    const track = page.locator('.site-footer__brand-track');
+    await expect(track).toHaveCSS('animation-play-state', 'paused');
+    await page.locator('.site-footer__brand').scrollIntoViewIfNeeded();
+    await expect(track).toHaveCSS('animation-play-state', 'running');
+    const initial = await track.evaluate(element => getComputedStyle(element).transform);
+    await expect.poll(() => track.evaluate(element => getComputedStyle(element).transform)).not.toBe(initial);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(track).toHaveCSS('animation-play-state', 'paused');
   });
 });
