@@ -4,6 +4,7 @@ import { projects } from '../data/projects';
 import { site } from '../data/site';
 import SiteFooter from './SiteFooter.astro';
 import ProjectVisual from './ProjectVisual.astro';
+import ProjectImageViewer from './ProjectImageViewer.astro';
 
 interface Props {
   project: Project;
@@ -147,6 +148,7 @@ const technicalHeading = sectionByLabel('Technical')?.body;
     </section>
   </article>
 
+  <ProjectImageViewer />
   <SiteFooter name={site.name} socials={site.socials} />
 </main>
 
