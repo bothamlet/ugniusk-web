@@ -9,7 +9,7 @@
         <span class="how-i-work__photo-label">Portrait</span>
       </div>
       <p class="how-i-work__caption">
-        Driven by curiosity,&nbsp;expression,<br />utility.
+        Driven by <span class="how-i-work__caption-phrase">curiosity, expression,</span><br />utility.
       </p>
     </div>
     <div class="how-i-work__text">
@@ -93,6 +93,10 @@
     color: var(--color-accent);
   }
 
+  .how-i-work__caption-phrase {
+    white-space: nowrap;
+  }
+
   .how-i-work__text {
     display: flex;
     flex-direction: column;
@@ -132,13 +136,26 @@
     }
 
     .how-i-work__photo {
-      min-height: 70vh;
+      height: clamp(16rem, 65svh, 40rem);
+      min-height: 0;
       overflow: hidden;
     }
 
+    .how-i-work__photo-placeholder {
+      min-height: 0;
+    }
+
     .how-i-work__caption {
-      right: 0;
+      top: clamp(2rem, 8vw, 4rem);
+      left: clamp(1rem, 6vw, 2rem);
+      right: clamp(1rem, 6vw, 2rem);
+      padding: 0;
       font-size: clamp(1.5rem, 6vw, 2.5rem);
+      overflow-wrap: anywhere;
+    }
+
+    .how-i-work__caption-phrase {
+      white-space: normal;
     }
 
     .how-i-work__text {
