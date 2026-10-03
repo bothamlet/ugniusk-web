@@ -40,7 +40,7 @@ const { firstName, lastName } = Astro.props;
       const words = Array.from(heroName.querySelectorAll<SVGSVGElement>(".hero-name__word"));
       if (!context) return;
       context.font = `400 100px ${getComputedStyle(heroName).fontFamily}`;
-      context.letterSpacing = "-1px";
+      context.letterSpacing = "1px";
       for (const word of words) {
         const metrics = context.measureText(word.textContent?.trim().toUpperCase() || "");
         word.setAttribute("viewBox", [
@@ -180,19 +180,19 @@ const { firstName, lastName } = Astro.props;
       display: block;
       overflow: visible;
       width: 63.8vw;
-      height: min(19.2vw, 24svh);
+      height: min(16.32vw, 20.4svh);
       color: var(--color-paper);
     }
 
     .hero-name__word:nth-child(2) {
       width: 53.9vw;
-      height: min(18.4vw, 23svh);
+      height: min(15.64vw, 19.55svh);
       margin-top: min(1.9vw, 2svh);
     }
 
     .hero-name__word:nth-child(3) {
       width: 41.4vw;
-      height: min(19vw, 24svh);
+      height: min(16.15vw, 20.4svh);
       margin-top: min(1.6vw, 2svh);
     }
 
@@ -204,7 +204,7 @@ const { firstName, lastName } = Astro.props;
       font-family: var(--font-display);
       font-size: 100px;
       font-weight: 400;
-      letter-spacing: -1px;
+      letter-spacing: 1px;
       fill: currentColor;
       stroke: currentColor;
       stroke-width: 2px;
