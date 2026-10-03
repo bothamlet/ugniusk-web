@@ -577,6 +577,11 @@ const technicalHeading = sectionByLabel('Technical')?.body;
   }
 
   @media (max-width: 600px) {
+    .project-meta-row {
+      grid-template-columns: max-content minmax(0, 1fr);
+      column-gap: 2rem;
+    }
+
     .project-meta-item:first-child,
     .project-meta-item:nth-child(3) {
       grid-column: 1 / -1;
@@ -599,6 +604,10 @@ const technicalHeading = sectionByLabel('Technical')?.body;
 
     .project-more__name {
       font-size: 1.45rem;
+    }
+
+    .project-more__type {
+      letter-spacing: normal;
     }
   }
 </style>
