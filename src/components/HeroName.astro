@@ -10,6 +10,14 @@ const { firstName, lastName } = Astro.props;
 <h1 class="hero-name" aria-label={`${firstName} ${lastName}`}>
   <span class="hero-name__line hero-name__line--first" aria-hidden="true">{firstName}</span>
   <span class="hero-name__line hero-name__line--last" aria-hidden="true">{lastName}</span>
+  <span class="hero-name__mobile" aria-hidden="true">
+    {[firstName, lastName.slice(0, 5), lastName.slice(5)].map((word, index) => (
+      <svg class:list={["hero-name__word", { "hero-name__word--accent": index > 0 }]}
+        viewBox="0 -75 400 80" preserveAspectRatio="none" focusable="false">
+        <text x="0" y="0">{word.toUpperCase()}</text>
+      </svg>
+    ))}
+  </span>
 </h1>
 
 <script>
@@ -26,6 +34,24 @@ const { firstName, lastName } = Astro.props;
 
   const fitHeroName = () => {
     if (!heroName || !heroSticky || heroLines.length === 0) return;
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      heroName.style.fontSize = "";
+      const context = document.createElement("canvas").getContext("2d");
+      const words = Array.from(heroName.querySelectorAll<SVGSVGElement>(".hero-name__word"));
+      if (!context) return;
+      context.font = `400 100px ${getComputedStyle(heroName).fontFamily}`;
+      context.letterSpacing = "-1px";
+      for (const word of words) {
+        const metrics = context.measureText(word.textContent?.trim().toUpperCase() || "");
+        word.setAttribute("viewBox", [
+          -metrics.actualBoundingBoxLeft,
+          -metrics.actualBoundingBoxAscent,
+          metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight,
+          metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent,
+        ].join(" "));
+      }
+      return;
+    }
     const available = heroSticky.clientWidth;
     if (!available) return;
 
@@ -130,6 +156,61 @@ const { firstName, lastName } = Astro.props;
     z-index: 2;
     color: var(--color-accent);
     animation-delay: 120ms;
+  }
+
+  .hero-name__mobile {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    .hero-name__line {
+      display: none;
+    }
+
+    .hero-name__mobile {
+      position: absolute;
+      top: 47.5%;
+      left: 9.5%;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(-50%);
+    }
+
+    .hero-name__word {
+      display: block;
+      overflow: visible;
+      width: 63.8vw;
+      height: min(19.2vw, 24svh);
+      color: var(--color-paper);
+    }
+
+    .hero-name__word:nth-child(2) {
+      width: 53.9vw;
+      height: min(18.4vw, 23svh);
+      margin-top: min(1.9vw, 2svh);
+    }
+
+    .hero-name__word:nth-child(3) {
+      width: 41.4vw;
+      height: min(19vw, 24svh);
+      margin-top: min(1.6vw, 2svh);
+    }
+
+    .hero-name__word--accent {
+      color: var(--color-accent);
+    }
+
+    .hero-name__word text {
+      font-family: var(--font-display);
+      font-size: 100px;
+      font-weight: 400;
+      letter-spacing: -1px;
+      fill: currentColor;
+      stroke: currentColor;
+      stroke-width: 2px;
+      stroke-linejoin: round;
+      paint-order: stroke fill;
+    }
   }
 
   @keyframes reveal-name {
