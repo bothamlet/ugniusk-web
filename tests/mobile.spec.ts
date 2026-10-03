@@ -133,7 +133,8 @@ test.describe('motion enabled on touch devices', () => {
     await authorLink.tap();
     await expect(page).toHaveURL(/#author$/);
     const nav = (await page.locator('.site-nav').boundingBox())!;
-    await expect.poll(async () => (await page.locator('#author').boundingBox())!.y).toBeCloseTo(nav.height + 16, 0);
+    // Scroll positions may round to a fractional CSS pixel.
+    await expect.poll(async () => Math.abs((await page.locator('#author').boundingBox())!.y - nav.height - 16)).toBeLessThanOrEqual(1);
   });
   test('mobile footer stays stationary as a cropped repeating strip', async ({ page }) => {
     for (const width of [320, 390, 430, 844]) {
@@ -174,4 +175,39 @@ test.describe('desktop footer motion', () => {
     await page.evaluate(() => window.scrollTo(0, 0));
     await expect(track).toHaveCSS('animation-play-state', 'paused');
   });
+});
+
+for (const viewport of [{ width: 320, height: 640 }, { width: 390, height: 844 }, { width: 667, height: 375 }]) {
+  test(`mobile hero preserves the three-line composition at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.getByRole('heading', { name: 'Ugnius Liberman', exact: true })).toBeVisible();
+    const words = page.locator('.hero-name__word');
+    await expect(words).toHaveCount(3);
+    const boxes = await Promise.all((await words.all()).map(word => word.boundingBox()));
+    const socials = (await page.locator('.hero-socials nav').boundingBox())!;
+    for (let index = 0; index < boxes.length; index++) {
+      const box = boxes[index]!;
+      expect(box.x).toBeCloseTo(viewport.width * 0.095, 0);
+      expect(box.x + box.width).toBeLessThan(viewport.width);
+      expect(box.y).toBeGreaterThan(0);
+      if (index) {
+        const previous = boxes[index - 1]!;
+        expect(box.y).toBeGreaterThan(previous.y + previous.height);
+        expect(box.width).toBeLessThan(previous.width);
+      }
+    }
+    const final = boxes[2]!;
+    expect(final.y + final.height).toBeLessThan(socials.y);
+  });
+}
+
+test('desktop hero retains its original two-line treatment', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page.locator('.hero-name__mobile')).toBeHidden();
+  await expect(page.locator('.hero-name__line--first')).toBeVisible();
+  await expect(page.locator('.hero-name__line--last')).toBeVisible();
 });
