@@ -135,7 +135,7 @@ test.describe('motion enabled on touch devices', () => {
     const nav = (await page.locator('.site-nav').boundingBox())!;
     await expect.poll(async () => (await page.locator('#author').boundingBox())!.y).toBeCloseTo(nav.height + 16, 0);
   });
-  test('mobile footer stays stationary and shows the complete name', async ({ page }) => {
+  test('mobile footer stays stationary as a cropped repeating strip', async ({ page }) => {
     for (const width of [320, 390, 430, 844]) {
       await page.setViewportSize({ width, height: 844 });
       await page.goto('/');
@@ -144,12 +144,18 @@ test.describe('motion enabled on touch devices', () => {
       const track = page.locator('.site-footer__brand-track');
       await expect(track).toHaveCSS('animation-name', 'none');
       expect(await track.evaluate(element => element.getAnimations().length)).toBe(0);
-      await expect(page.locator('.site-footer__brand-name:visible')).toHaveCount(1);
-      for (const word of await page.locator('.site-footer__brand-name:visible > span').all()) {
-        const rect = (await word.boundingBox())!;
-        expect(rect.x).toBeGreaterThanOrEqual(0);
-        expect(rect.x + rect.width).toBeLessThanOrEqual(width);
-      }
+      const names = page.locator('.site-footer__brand-name:visible');
+      await expect(names).toHaveCount(2);
+      const first = (await names.nth(0).boundingBox())!;
+      const second = (await names.nth(1).boundingBox())!;
+      expect(first.x).toBeLessThan(0);
+      expect(first.y).toBeCloseTo(second.y, 0);
+      expect(second.x + second.width).toBeGreaterThan(width);
+      const white = (await names.first().locator('span').nth(0).boundingBox())!;
+      const pink = (await names.first().locator('span').nth(1).boundingBox())!;
+      expect(white.y).toBeCloseTo(pink.y, 0);
+      expect(pink.x).toBeGreaterThan(white.x);
+
     }
   });
 });
