@@ -74,28 +74,6 @@ const setupBehindParallax = () => {
 	);
 };
 
-// Footer marquee speed boost when in view
-const setupFooterJuice = () => {
-	const track = document.querySelector<HTMLElement>(
-		".site-footer__brand-track",
-	);
-	if (!track) return;
-
-	const observer = new IntersectionObserver(
-		(entries) => {
-			if (entries[0]?.isIntersecting) {
-				track.style.animationDuration = "6s";
-			} else {
-				track.style.animationDuration = "12s";
-			}
-		},
-		{ threshold: 0.3 },
-	);
-
-	const footer = document.querySelector<HTMLElement>(".site-footer");
-	if (footer) observer.observe(footer);
-};
-
 // Reveal and card animations live in their own chunk (scripts/reveal.ts). Project
 // pages have no targets, so anime.js is never fetched there.
 const loadReveals = () => {
@@ -130,7 +108,6 @@ const initializeMotion = () => {
 	loadReveals();
 	setupHeroParallax();
 	setupBehindParallax();
-	setupFooterJuice();
 
 	window.siteMotion = { lenis };
 

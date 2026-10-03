@@ -45,6 +45,16 @@ const { name, socials } = Astro.props;
   </div>
 </footer>
 
+<script>
+  // Keep the off-screen ticker idle; only its transform animates while visible.
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      entry.target.classList.toggle('site-footer__brand--visible', entry.isIntersecting);
+    }
+  });
+  document.querySelectorAll('.site-footer__brand').forEach(brand => observer.observe(brand));
+</script>
+
 <style>
   .site-footer {
     position: relative;
@@ -133,6 +143,7 @@ const { name, socials } = Astro.props;
   }
 
   .site-footer__brand {
+    contain: paint;
     width: 100vw;
     margin-left: calc(-1 * clamp(1.5rem, 4vw, 4rem));
     overflow: hidden;
@@ -144,6 +155,13 @@ const { name, socials } = Astro.props;
     display: flex;
     width: max-content;
     animation: marquee 12s linear infinite;
+    animation-play-state: paused;
+    backface-visibility: hidden;
+  }
+
+  .site-footer__brand--visible .site-footer__brand-track {
+    animation-play-state: running;
+    will-change: transform;
   }
 
   .site-footer__brand-name {
@@ -163,8 +181,14 @@ const { name, socials } = Astro.props;
   }
 
   @keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); }
+  }
+
+  @media (scripting: none) {
+    .site-footer__brand-track {
+      animation-play-state: running;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -185,7 +209,25 @@ const { name, socials } = Astro.props;
 
     .site-footer__socials {
       flex-wrap: wrap;
-      gap: 0.75rem;
+      justify-content: center;
+      width: 100%;
+      gap: 0.75rem 1rem;
+    }
+
+    .site-footer__social-link {
+      min-height: 2.75rem;
+    }
+
+    .site-footer__dot {
+      display: none;
+    }
+
+    .site-footer__meta {
+      text-align: center;
+    }
+
+    .site-footer__brand-name:nth-child(n + 3) {
+      display: none;
     }
   }
 </style>
