@@ -134,6 +134,16 @@ const allProjects: Project[] = [
 		cardImage: "/chap-card.webp",
 		ogImage: "/og/chap-card-full.png",
 		imageAlt: "Chap - the app logo beside an iPhone showing an empty envelope dashboard",
+		gallery: [
+			"/chap-card-full.webp",
+			"/images/projects/chap-2.webp",
+			"/images/projects/chap-3.webp",
+		],
+		galleryAlt: [
+			"Chap - the app logo beside an iPhone showing an empty envelope dashboard",
+			"Chap - the all-caught-up screen beside the line Keep your money tidy",
+			"Chap - the settings menu beside the line Stay in control",
+		],
 		technical:
 			"Data stays local-first and encrypted at rest, with Room running on a SQLCipher database and backups sealed with AES-GCM keys held in the Android Keystore. The CSV pipeline sniffs headers, stages drafts for human review, and auto-tags transactions through user-defined matching rules.\n\nEvery screen was implemented against a hand-made HTML mock that lives in the repo, so the visual contract is versioned like code.",
 		reflection:

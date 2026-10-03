@@ -11,6 +11,8 @@ const { src, alt, eager = false, code } = Astro.props;
 // Intrinsic dimensions of the shipped WebP assets - reserves layout space (no CLS).
 const IMAGE_DIMS: Record<string, { w: number; h: number }> = {
 	'/chap-card-full.webp': { w: 3840, h: 1920 },
+	'/images/projects/chap-2.webp': { w: 6688, h: 3764 },
+	'/images/projects/chap-3.webp': { w: 6688, h: 3764 },
 	'/jukdata-card.webp': { w: 2560, h: 1440 },
 	'/screenshots/this-site-card.webp': { w: 1440, h: 810 },
 	'/images/projects/jukdata-2.webp': { w: 2560, h: 699 },
