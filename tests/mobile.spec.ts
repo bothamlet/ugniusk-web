@@ -135,8 +135,29 @@ test.describe('motion enabled on touch devices', () => {
     const nav = (await page.locator('.site-nav').boundingBox())!;
     await expect.poll(async () => (await page.locator('#author').boundingBox())!.y).toBeCloseTo(nav.height + 16, 0);
   });
+  test('mobile footer stays stationary and shows the complete name', async ({ page }) => {
+    for (const width of [320, 390, 430, 844]) {
+      await page.setViewportSize({ width, height: 844 });
+      await page.goto('/');
+      await page.evaluate(() => document.fonts.ready);
+      await page.locator('.site-footer__brand').scrollIntoViewIfNeeded();
+      const track = page.locator('.site-footer__brand-track');
+      await expect(track).toHaveCSS('animation-name', 'none');
+      expect(await track.evaluate(element => element.getAnimations().length)).toBe(0);
+      await expect(page.locator('.site-footer__brand-name:visible')).toHaveCount(1);
+      for (const word of await page.locator('.site-footer__brand-name:visible > span').all()) {
+        const rect = (await word.boundingBox())!;
+        expect(rect.x).toBeGreaterThanOrEqual(0);
+        expect(rect.x + rect.width).toBeLessThanOrEqual(width);
+      }
+    }
+  });
+});
+
+test.describe('desktop footer motion', () => {
+  test.use({ reducedMotion: 'no-preference', isMobile: false, hasTouch: false });
   test('footer ticker pauses off-screen and advances when visible', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto('/');
     const track = page.locator('.site-footer__brand-track');
     await expect(track).toHaveCSS('animation-play-state', 'paused');

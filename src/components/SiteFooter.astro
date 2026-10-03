@@ -226,7 +226,30 @@ const { name, socials } = Astro.props;
       text-align: center;
     }
 
-    .site-footer__brand-name:nth-child(n + 3) {
+  }
+
+  @media (max-width: 767px), (pointer: coarse) {
+    .site-footer__brand--visible .site-footer__brand-track,
+    .site-footer__brand-track {
+      animation: none;
+      will-change: auto;
+      width: 100%;
+      justify-content: center;
+      padding: 0.5rem 1.5rem;
+    }
+
+    .site-footer__brand-name {
+      padding-right: 0;
+      font-size: clamp(2.5rem, 12vw, 4rem);
+      line-height: 0.95;
+      text-align: center;
+    }
+
+    .site-footer__brand-name > span {
+      display: block;
+    }
+
+    .site-footer__brand-name:nth-child(n + 2) {
       display: none;
     }
   }
