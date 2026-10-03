@@ -329,7 +329,7 @@ const technicalHeading = sectionByLabel('Technical')?.body;
     font-size: 0.75rem;
     letter-spacing: 0.12em;
     text-transform: lowercase;
-    color: var(--color-accent-soft);
+    color: var(--color-accent-deep);
   }
 
   .project-meta-item__value {
@@ -372,7 +372,7 @@ const technicalHeading = sectionByLabel('Technical')?.body;
     font-size: clamp(0.7rem, 0.9vw, 0.82rem);
     font-weight: 400;
     letter-spacing: 0.1em;
-    color: var(--color-accent-soft);
+    color: var(--color-accent-deep);
     text-transform: uppercase;
   }
 
@@ -491,14 +491,72 @@ const technicalHeading = sectionByLabel('Technical')?.body;
      RESPONSIVE
      ════════════════════════════════ */
   @media (max-width: 900px) {
+    .project-detail {
+      padding-top: calc(var(--site-nav-height, 3.5rem) + 1.5rem);
+    }
+
     .project-first-view {
       grid-template-columns: 1fr;
-      gap: 2rem;
+      gap: 1.25rem;
       align-items: start;
+      padding-top: 0;
+    }
+
+    .project-back {
+      margin-bottom: 1.5rem;
+    }
+
+    .project-title,
+    .project-title--long {
+      margin-bottom: 0;
     }
 
     .project-first-view__right {
       align-items: flex-start;
+    }
+
+    .project-meta-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.5rem;
+      margin-top: 0;
+      padding: 1.75rem 0 2.5rem;
+    }
+
+    .project-meta-item {
+      min-width: 0;
+    }
+
+    .project-meta-item:last-child {
+      padding-left: 0;
+    }
+
+    .project-meta-item__value {
+      white-space: normal;
+      overflow-wrap: anywhere;
+      line-height: 1.4;
+    }
+
+    .project-editorial {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+      padding: 3rem 0;
+    }
+
+    .project-editorial-spacer {
+      display: none;
+    }
+
+    .project-editorial-heading {
+      font-size: clamp(1.65rem, 6.8vw, 2.6rem);
+      margin-bottom: 1.25rem;
+    }
+
+    .project-editorial-body {
+      max-width: 65ch;
+    }
+
+    .project-more {
+      padding: 3rem 0;
     }
   }
 
@@ -512,8 +570,33 @@ const technicalHeading = sectionByLabel('Technical')?.body;
     }
 
     .project-meta-row {
-      grid-template-columns: repeat(2, 1fr);
       gap: 1.25rem;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .project-meta-item:first-child,
+    .project-meta-item:nth-child(3) {
+      grid-column: 1 / -1;
+    }
+
+    .project-meta-item:nth-child(2) {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .project-meta-item:nth-child(4) {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .project-more__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2rem;
+    }
+
+    .project-more__name {
+      font-size: 1.45rem;
     }
   }
 </style>

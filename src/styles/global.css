@@ -24,6 +24,7 @@
 
 /* ── Design tokens ── */
 :root {
+  --site-nav-height: 3.5rem;
   --color-ink: #030303;
   --color-paper: #f4f3f0;
   --color-accent: #d81b6a;
@@ -60,6 +61,7 @@
 }
 
 html {
+  scroll-padding-top: calc(var(--site-nav-height) + 1rem);
   line-height: 1.5;
   -webkit-text-size-adjust: 100%;
   tab-size: 4;

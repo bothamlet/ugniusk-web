@@ -7,7 +7,7 @@
   <a class="site-nav__brand" href="/#top">Ugnius Liberman</a>
   <ul class="site-nav__links">
     <li><a class="site-nav__link" href="/#about">About</a></li>
-    <li><a class="site-nav__link" href="/#work">Selected Work</a></li>
+    <li><a class="site-nav__link" href="/#work" aria-label="Selected Work"><span class="site-nav__selected">Selected </span>Work</a></li>
     <li><a class="site-nav__link" href="/#author">Author</a></li>
   </ul>
 </nav>
@@ -36,8 +36,10 @@
     opacity: 1;
   }
 
-  .site-nav__brand,
-  .site-nav__links {
+  .site-nav--visible .site-nav__brand,
+  .site-nav--visible .site-nav__links,
+  .site-nav:focus-within .site-nav__brand,
+  .site-nav:focus-within .site-nav__links {
     pointer-events: auto;
   }
 
@@ -74,6 +76,59 @@
 
   .site-nav__link:hover {
     opacity: 0.6;
+  }
+
+  .site-nav a:focus-visible {
+    outline: 2px solid var(--color-accent-soft);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 900px) {
+    .site-nav {
+      flex-wrap: wrap;
+      gap: 0.25rem 0.5rem;
+      padding: max(0.25rem, env(safe-area-inset-top)) 0.75rem 0.25rem;
+      mix-blend-mode: normal;
+      background: rgba(3, 3, 3, 0.94);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .site-nav__brand {
+      display: flex;
+      align-items: center;
+      min-height: 2.75rem;
+      flex: 1 1 5rem;
+      min-width: min-content;
+      font-size: 0.75rem;
+      line-height: 1.15;
+    }
+
+    .site-nav__links {
+      flex: 1 0 auto;
+      justify-content: flex-end;
+      gap: 0.25rem;
+    }
+
+    .site-nav__links li {
+      flex: 1;
+    }
+
+    .site-nav__link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.75rem;
+      padding-inline: 0.375rem;
+      font-size: 0.8125rem;
+      line-height: 1.2;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    .site-nav__selected {
+      display: none;
+    }
   }
 
   @media (pointer: coarse) {
