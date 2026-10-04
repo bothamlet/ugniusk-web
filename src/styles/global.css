@@ -1,3 +1,12 @@
+/* IBM Plex Mono, self-hosted under the SIL Open Font License. */
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-regular.ttf") format("truetype");
+}
+
 /* Archivo Black, self-hosted (Google Fonts, OFL - see public/fonts/OFL-ArchivoBlack.txt).
    Local so the hero wipe always runs over a line whose width is final: a font
    that swaps in after the wipe starts makes the reveal jump. */
@@ -38,6 +47,7 @@
   --font-display: "Archivo Black", Arial, Helvetica, sans-serif;
   --font-reading: Georgia, "Times New Roman", serif;
   --font-mono: "Courier New", Courier, monospace;
+  --font-mono-desktop: "IBM Plex Mono", monospace;
 
   color-scheme: dark;
   background: var(--color-ink);

@@ -566,8 +566,16 @@ const technicalHeading = sectionByLabel('Technical')?.body;
 
   @media (min-width: 1200px) {
     .project-meta-item__label {
+      font-family: var(--font-mono-desktop);
       font-size: clamp(0.875rem, 0.8vw, 1rem);
-      letter-spacing: 0.04em;
+      letter-spacing: 0.01em;
+    }
+
+    .project-editorial-label {
+      font-family: var(--font-mono-desktop);
+      font-size: clamp(0.875rem, 0.8vw, 1rem);
+      letter-spacing: 0.01em;
+      -webkit-text-stroke: 0;
     }
   }
 
