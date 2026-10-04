@@ -4,7 +4,7 @@
 ---
 
 <nav class="site-nav" aria-label="Main navigation">
-  <a class="site-nav__brand" href="/#top">Ugnius Liberman</a>
+  <a class="site-nav__brand" href="/#top">Ugnius <span class="site-nav__surname">Liberman</span></a>
   <ul class="site-nav__links">
     <li><a class="site-nav__link" href="/#about">About</a></li>
     <li><a class="site-nav__link" href="/#work" aria-label="Selected Work"><span class="site-nav__selected">Selected </span>Work</a></li>
@@ -54,6 +54,10 @@
     line-height: 1;
   }
 
+  .site-nav__surname {
+    color: #fff;
+  }
+
   .site-nav__links {
     list-style: none;
     margin: 0;
@@ -66,6 +70,7 @@
     font-family: var(--font-mono);
     font-size: clamp(0.6rem, 0.8vw, 0.7rem);
     font-weight: 400;
+    -webkit-text-stroke: 0.1px currentColor;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #fff;
@@ -96,6 +101,7 @@
 
     .site-nav__brand {
       display: flex;
+      column-gap: 0.25em;
       align-items: center;
       min-height: 2.75rem;
       flex: 1 1 5rem;
