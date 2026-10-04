@@ -4,9 +4,10 @@ interface Props {
 	alt: string;
 	eager?: boolean;
 	code: string;
+	inset?: boolean;
 }
 
-const { src, alt, eager = false, code } = Astro.props;
+const { src, alt, eager = false, code, inset = false } = Astro.props;
 
 // Intrinsic dimensions of the shipped image assets - reserves layout space (no CLS).
 const IMAGE_DIMS: Record<string, { w: number; h: number }> = {
@@ -30,7 +31,7 @@ const IMAGE_DIMS: Record<string, { w: number; h: number }> = {
 const dims = src ? (IMAGE_DIMS[src] ?? { w: 1920, h: 1080 }) : undefined;
 ---
 
-<div class="project-visual-full">
+<div class:list={["project-visual-full", { "project-visual-full--inset": inset }]}>
   <div class="project-visual-inner">
     {src ? (
       <a class="project-visual-image cursor-hover" href={src} target="_blank" rel="noopener noreferrer" aria-label={`Open original image: ${alt}`}>
@@ -72,6 +73,16 @@ const dims = src ? (IMAGE_DIMS[src] ?? { w: 1920, h: 1080 }) : undefined;
     position: relative;
     width: 100%;
     line-height: 0;
+  }
+
+  .project-visual-full--inset .project-visual-inner {
+    padding: clamp(1.5rem, 5vw, 4rem) 0;
+  }
+
+  .project-visual-full--inset .project-visual-image {
+    width: 80%;
+    max-width: 64rem;
+    margin-inline: auto;
   }
 
   .project-visual-image:focus-visible {

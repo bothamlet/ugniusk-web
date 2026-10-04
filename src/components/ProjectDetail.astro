@@ -90,7 +90,7 @@ const technicalHeading = sectionByLabel('Technical')?.body;
     </section>
 
     <!-- Second visual -->
-    <ProjectVisual src={project.gallery?.[1]} alt={project.galleryAlt?.[1] ?? `${project.title} - overview`} code={project.code} />
+    <ProjectVisual src={project.gallery?.[1]} alt={project.galleryAlt?.[1] ?? `${project.title} - overview`} code={project.code} inset={project.slug === "todays-brief"} />
 
     <!-- Second editorial - left column -->
     <section class="project-editorial project-editorial--left">
