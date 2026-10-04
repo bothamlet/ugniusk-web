@@ -52,7 +52,7 @@ const allProjects: Project[] = [
 			"Today's Brief - the editorial wordmark above the six section markers, one filled",
 		gallery: [
 			"/images/projects/todays-brief-card.webp",
-			"/images/projects/todays-brief-world.jpg",
+			"/images/projects/todays-brief-world.webp",
 		],
 		galleryAlt: [
 			"Today's Brief - the editorial wordmark above the six section markers, one filled",
