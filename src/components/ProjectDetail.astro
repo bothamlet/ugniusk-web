@@ -327,10 +327,9 @@ const technicalHeading = sectionByLabel('Technical')?.body;
 
   .project-meta-item__label {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: clamp(0.8125rem, 0.95vw, 0.9rem);
     font-weight: 400;
-    -webkit-text-stroke: 0.1px currentColor;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     text-transform: lowercase;
     color: var(--color-accent-deep);
   }
