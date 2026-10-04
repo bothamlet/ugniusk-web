@@ -50,6 +50,14 @@ const allProjects: Project[] = [
 		image: "/images/projects/todays-brief-card.webp",
 		imageAlt:
 			"Today's Brief - the editorial wordmark above the six section markers, one filled",
+		gallery: [
+			"/images/projects/todays-brief-card.webp",
+			"/images/projects/todays-brief-world.jpg",
+		],
+		galleryAlt: [
+			"Today's Brief - the editorial wordmark above the six section markers, one filled",
+			"Today's Brief World section - newspaper-style layout with lead and secondary stories, photographs, headlines, and summaries",
+		],
 		technical:
 			"RSS feeds provide the source material, lexical clustering groups related headlines, a language model handles significance and categorization, and SQLite tracks stories across days. A systemd timer runs the pipeline each morning, with retry and fallback logic for network or build failures.",
 		reflection:
