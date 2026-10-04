@@ -564,6 +564,13 @@ const technicalHeading = sectionByLabel('Technical')?.body;
     }
   }
 
+  @media (min-width: 1200px) {
+    .project-meta-item__label {
+      font-size: clamp(0.875rem, 0.8vw, 1rem);
+      letter-spacing: 0.04em;
+    }
+  }
+
   @media (max-width: 767px) {
     .project-detail {
       width: min(calc(100% - 2rem), 92rem);
