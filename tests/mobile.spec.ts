@@ -124,10 +124,10 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 1000
       return { top: parseFloat(css.paddingTop), bottom: parseFloat(css.paddingBottom) };
     });
     const rem = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
-    // Same declarations as index.astro: the base rule, then its max-width 767px override; both add 32px to the top.
+    // Same declarations as index.astro: the base rule, then its max-width 767px override; both add 96px to the top.
     const expected = viewport.width <= 767
-      ? { top: clamp(10 * rem, viewport.height * 0.24, 16 * rem) + 32, bottom: clamp(14 * rem, viewport.height * 0.34, 22 * rem) }
-      : { top: clamp(5 * rem, viewport.width * 0.1, 8 * rem) + 32, bottom: clamp(8 * rem, viewport.width * 0.16, 14 * rem) };
+      ? { top: clamp(10 * rem, viewport.height * 0.24, 16 * rem) + 96, bottom: clamp(14 * rem, viewport.height * 0.34, 22 * rem) }
+      : { top: clamp(5 * rem, viewport.width * 0.1, 8 * rem) + 96, bottom: clamp(8 * rem, viewport.width * 0.16, 14 * rem) };
     expect(padding.top).toBeCloseTo(expected.top, 0);
     expect(padding.bottom).toBeCloseTo(expected.bottom, 0);
   });
