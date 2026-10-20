@@ -2,7 +2,6 @@
 import Hero from '../components/Hero.astro';
 import BehindWork from '../components/BehindWork.astro';
 import ProjectCarousel from '../components/ProjectCarousel.astro';
-import HowIWork from '../components/HowIWork.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { projects } from '../data/projects';
@@ -15,7 +14,6 @@ import { site } from '../data/site';
     <div class="scroll-overlay">
       <BehindWork />
       <ProjectCarousel projects={projects} />
-      <HowIWork />
       <section class="site-ender">
         <p class="site-ender__text">Based on the original works of Ugnius <span class="site-ender__accent">Liberman</span></p>
       </section>

@@ -32,34 +32,17 @@ for (const width of [320, 390, 430]) {
       expect(second.y).toBeGreaterThan(first.y + first.height);
     });
   }
-  test(`home: hero and author remain inside ${width}px`, async ({ page }) => {
+  test(`home: hero remains inside ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 640 });
     await page.goto('/');
     await page.evaluate(() => document.fonts.ready);
     const social = (await page.locator('.hero-socials').boundingBox())!;
     expect(social.y + social.height).toBeLessThanOrEqual(640);
-    const caption = await page.locator('.how-i-work__caption').evaluate(element => {
-      const range = document.createRange();
-      range.selectNodeContents(element);
-      return [...range.getClientRects()].map(rect => ({ left: rect.left, right: rect.right }));
-    });
-    for (const rect of caption) {
-      expect(rect.left).toBeGreaterThanOrEqual(0);
-      expect(rect.right).toBeLessThanOrEqual(width);
-    }
-    expect((await page.locator('.how-i-work__photo').boundingBox())!.height).toBeLessThan(640);
   });
-  test(`home: matching bio type and centered footer links at ${width}px`, async ({ page }) => {
+  test(`home: footer links stay centered at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
     await page.goto('/');
     await page.evaluate(() => document.fonts.ready);
-    for (const pair of [['.behind-work__copy', '.how-i-work__copy'], ['.behind-work__eyebrow', '.how-i-work__eyebrow']]) {
-      const styles = await Promise.all(pair.map(selector => page.locator(selector).first().evaluate(element => {
-        const css = getComputedStyle(element);
-        return [css.fontFamily, css.fontSize, css.fontWeight, css.lineHeight];
-      })));
-      expect(styles[0]).toEqual(styles[1]);
-    }
     const rows = new Map<number, { left: number; right: number }[]>();
     for (const link of await page.locator('.site-footer__social-link').all()) {
       const rect = (await link.boundingBox())!;
@@ -106,12 +89,49 @@ test('mobile anchor navigation clears the fixed header', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.evaluate(() => window.scrollTo(0, 1000));
-  await page.getByRole('link', { name: 'Author', exact: true }).click();
-  await expect(page).toHaveURL(/#author$/);
+  await page.getByRole('link', { name: 'About', exact: true }).click();
+  await expect(page).toHaveURL(/#about$/);
   const nav = (await page.locator('.site-nav').boundingBox())!;
-  const author = (await page.locator('#author').boundingBox())!;
-  expect(author.y).toBeGreaterThanOrEqual(nav.y + nav.height - 1);
+  const about = (await page.locator('#about').boundingBox())!;
+  expect(about.y).toBeGreaterThanOrEqual(nav.y + nav.height - 1);
 });
+
+const clamp = (min: number, value: number, max: number) => Math.min(Math.max(value, min), max);
+
+for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 1000 }]) {
+  test(`home: projects run straight into the unchanged site ender at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.locator('.how-i-work')).toHaveCount(0);
+    await expect(page.locator('#author')).toHaveCount(0);
+    await expect(page.getByText('Portrait', { exact: true })).toHaveCount(0);
+    await expect(page.locator('.site-nav').getByRole('link', { name: 'Author', exact: true })).toHaveCount(0);
+
+    const ender = page.locator('.site-ender');
+    const preceding = await ender.evaluate(element => {
+      const sibling = element.previousElementSibling!;
+      return { id: sibling.id, classes: [...sibling.classList] };
+    });
+    expect(preceding.id).toBe('work');
+    expect(preceding.classes).toContain('selected-work');
+    const work = (await page.locator('#work').boundingBox())!;
+    expect((await ender.boundingBox())!.y).toBeCloseTo(work.y + work.height, 0);
+    await expect(ender.locator('.site-ender__text')).toHaveText('Based on the original works of Ugnius Liberman');
+
+    const padding = await ender.evaluate(element => {
+      const css = getComputedStyle(element);
+      return { top: parseFloat(css.paddingTop), bottom: parseFloat(css.paddingBottom) };
+    });
+    const rem = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+    // Same declarations as index.astro: the base rule, then its max-width 767px override.
+    const expected = viewport.width <= 767
+      ? { top: clamp(10 * rem, viewport.height * 0.24, 16 * rem), bottom: clamp(14 * rem, viewport.height * 0.34, 22 * rem) }
+      : { top: clamp(5 * rem, viewport.width * 0.1, 8 * rem), bottom: clamp(8 * rem, viewport.width * 0.16, 14 * rem) };
+    expect(padding.top).toBeCloseTo(expected.top, 0);
+    expect(padding.bottom).toBeCloseTo(expected.bottom, 0);
+  });
+}
 
 test('desktop retains two editorial columns and related cards', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -129,12 +149,12 @@ test.describe('motion enabled on touch devices', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
     await page.evaluate(() => window.scrollTo(0, 1000));
-    const authorLink = page.getByRole('link', { name: 'Author', exact: true });
-    await authorLink.tap();
-    await expect(page).toHaveURL(/#author$/);
+    const aboutLink = page.getByRole('link', { name: 'About', exact: true });
+    await aboutLink.tap();
+    await expect(page).toHaveURL(/#about$/);
     const nav = (await page.locator('.site-nav').boundingBox())!;
     // Scroll positions may round to a fractional CSS pixel.
-    await expect.poll(async () => Math.abs((await page.locator('#author').boundingBox())!.y - nav.height - 16)).toBeLessThanOrEqual(1);
+    await expect.poll(async () => Math.abs((await page.locator('#about').boundingBox())!.y - nav.height - 16)).toBeLessThanOrEqual(1);
   });
   test('mobile footer stays stationary as a cropped repeating strip', async ({ page }) => {
     for (const width of [320, 390, 430, 844]) {
