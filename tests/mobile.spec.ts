@@ -231,3 +231,32 @@ test('desktop hero retains its original two-line treatment', async ({ page }) =>
   await expect(page.locator('.hero-name__line--first')).toBeVisible();
   await expect(page.locator('.hero-name__line--last')).toBeVisible();
 });
+
+const socialProfiles = {
+  GitHub: 'https://github.com/bothamlet',
+  LinkedIn: 'https://www.linkedin.com/in/ugniusk/',
+  Instagram: 'https://www.instagram.com/lieputis_berzas?vrfl=amtkYmlmNDNvOGxn',
+};
+
+test('hero, footer and project footer link to the supplied profiles', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  for (const [label, href] of Object.entries(socialProfiles)) {
+    await expect(page.locator('.hero-socials').getByRole('link', { name: label, exact: true })).toHaveAttribute('href', href);
+    await expect(page.locator('.site-footer').getByRole('link', { name: label, exact: true })).toHaveAttribute('href', href);
+  }
+
+  await page.goto('/projects/chap/');
+  for (const [label, href] of Object.entries(socialProfiles)) {
+    await expect(page.locator('.site-footer').getByRole('link', { name: label, exact: true })).toHaveAttribute('href', href);
+  }
+});
+
+test('JSON-LD Person.sameAs lists the supplied profiles', async ({ page }) => {
+  await page.goto('/');
+  const sameAs = await page.locator('script[type="application/ld+json"]').evaluate((script) => {
+    const graph = JSON.parse(script.textContent ?? '{}')['@graph'] as { '@type': string; sameAs?: string[] }[];
+    return graph.find((node) => node['@type'] === 'Person')?.sameAs ?? [];
+  });
+  expect([...sameAs].sort()).toEqual(Object.values(socialProfiles).sort());
+});
