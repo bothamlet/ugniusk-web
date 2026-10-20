@@ -67,7 +67,7 @@ import { site } from '../data/site';
     position: relative;
     z-index: 1;
     background: #08090a;
-    padding-block: clamp(5rem, 10vw, 8rem) clamp(8rem, 16vw, 14rem);
+    padding-block: calc(clamp(5rem, 10vw, 8rem) + 32px) clamp(8rem, 16vw, 14rem);
     padding-inline: clamp(1.5rem, 4vw, 4rem);
     text-align: center;
   }
@@ -90,7 +90,7 @@ import { site } from '../data/site';
 
   @media (max-width: 767px) {
     .site-ender {
-      padding-block: clamp(10rem, 24svh, 16rem) clamp(14rem, 34svh, 22rem);
+      padding-block: calc(clamp(10rem, 24svh, 16rem) + 32px) clamp(14rem, 34svh, 22rem);
     }
   }
 </style>
