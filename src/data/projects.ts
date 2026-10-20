@@ -92,7 +92,7 @@ const allProjects: Project[] = [
 			"An ongoing experiment in what a personal site can be, based on the original works of Ugnius Liberman.",
 		label: "Experimental Personal Portfolio",
 		type: "Web Design & Engineering",
-		stack: ["Astro", "Anime.js", "Lenis", "Tailwind CSS"],
+		stack: ["Astro", "Anime.js", "Lenis"],
 		status: "Active",
 		image: "/screenshots/this-site-card.webp",
 		ogImage: "/og/this-site-card.png",
@@ -123,7 +123,7 @@ const allProjects: Project[] = [
 			{
 				label: "Technical",
 				body:
-					"Built on Astro's islands architecture for static delivery with zero shipped JavaScript by default. Tailwind CSS v4 handles the design system, TypeScript runs end to end, and the site deploys to Vercel with analytics and speed insights turned on.",
+					"Built on Astro's islands architecture for static delivery with zero shipped JavaScript by default. Hand-written CSS with custom properties handles the design system, TypeScript runs end to end, and the site deploys to Vercel with analytics and speed insights turned on.",
 			},
 		],
 	},
@@ -153,9 +153,9 @@ const allProjects: Project[] = [
 			"Chap - the settings menu beside the line Stay in control",
 		],
 		technical:
-			"Data stays local-first and encrypted at rest, with Room running on a SQLCipher database and backups sealed with AES-GCM keys held in the Android Keystore. The CSV pipeline sniffs headers, stages drafts for human review, and auto-tags transactions through user-defined matching rules.\n\nEvery screen was implemented against a hand-made HTML mock that lives in the repo, so the visual contract is versioned like code.",
+			"Data stays local-first and encrypted at rest, with Room running on a SQLCipher database and backups sealed with AES-GCM keys held in the Android Keystore. The CSV pipeline sniffs headers, stages drafts for human review, and auto-tags transactions through user-defined matching rules.\n\nEvery screen was implemented against a hand-made HTML mock, so the visual contract is versioned like code.",
 		reflection:
-			"Budget is a native Android envelope-budgeting app built to run itself - transactions arrive from imports, bank connections, and receipts instead of manual entry, and only genuinely ambiguous cases surface for a decision. Everything else gets filed without you ever touching it.",
+			"Chap is a native Android envelope-budgeting app built to run itself - CSV imports and categorization rules reduce repetitive manual entry, and only genuinely ambiguous cases surface for a decision. Everything else gets filed without you ever touching it.",
 		reflectionTitle: "Friction is the enemy",
 		reflectionBody:
 			"Every budgeting app I'd used added friction instead of removing it. I wanted something to set and forget, fully automated, with analytics that were actually intuitive and informative. So I built it on a local-only philosophy from the start, and wrapped it in a calm, polished purple interface, because managing money should feel easy.",
@@ -163,7 +163,7 @@ const allProjects: Project[] = [
 			{
 				label: "Overview",
 				body:
-					"Categorization rules are set once and applied automatically after that, so the same decision never has to be made twice. Everything stays local by default, encrypted at rest, with a full export whenever the data needs to go somewhere else.",
+					"Categorization rules are set once and applied automatically after that, so the same decision never has to be made twice. Everything stays local by default, encrypted at rest, with encrypted backups tied to the original installation's Keystore key. These backups cannot restore data after uninstalling the app or on another device.",
 			},
 			{
 				label: "Technical",
@@ -197,7 +197,7 @@ const allProjects: Project[] = [
 			"JUKdata - the technologies and case studies section",
 		],
 		technical:
-			"A WebGL simplex-noise shader reacts to the cursor over a hand-written canvas fallback. Scroll reveals run on Motion. The technology ticker is pure CSS. Reduced-motion users get a static, no-JavaScript render.",
+			"A WebGL simplex-noise shader reacts to the cursor over a hand-written canvas fallback. Hero entrance and project-tab transitions run on Motion. The technology ticker is pure CSS. Reduced-motion users get a static treatment.",
 		reflection:
 			"JUKdata is a fictional corporate site for an imaginary Lithuanian data solutions firm - built to see whether a technical service industry could be presented with real warmth.",
 		reflectionTitle: "Warming up the data",
@@ -217,7 +217,7 @@ const allProjects: Project[] = [
 			{
 				label: "Technical",
 				body:
-					"Built on the Next.js App Router and exported as a fully static site - React 19 renders server-side, TypeScript runs end to end, and Tailwind CSS v4 handles the design system. Cookie consent is managed through Google Tag Manager with GDPR-default analytics gates.",
+					"Built on the Next.js App Router and exported as a fully static site - React 19 renders server-side, TypeScript runs end to end, and Tailwind CSS v4 handles the design system. Cookie consent is managed through Silktide, with Google Consent Mode defaults.",
 			},
 		],
 	},

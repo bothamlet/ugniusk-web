@@ -260,3 +260,35 @@ test('JSON-LD Person.sameAs lists the supplied profiles', async ({ page }) => {
   });
   expect([...sameAs].sort()).toEqual(Object.values(socialProfiles).sort());
 });
+
+test('project pages carry the corrected factual claims', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  await page.goto('/projects/this-site/');
+  const thisSite = page.locator('.project-page');
+  await expect(page.locator('.project-meta-item__value').nth(2)).toHaveText('Astro · Anime.js · Lenis');
+  await expect(thisSite).toContainText('Hand-written CSS with custom properties handles the design system');
+  await expect(thisSite).not.toContainText('Tailwind');
+
+  await page.goto('/projects/chap/');
+  const chap = page.locator('.project-page');
+  const chapLead = page.locator('.project-editorial-heading').first();
+  await expect(chapLead).toContainText('Chap is a native Android envelope-budgeting app');
+  await expect(chapLead).toContainText('CSV imports and categorization rules reduce repetitive manual entry');
+  await expect(chapLead).toContainText('only genuinely ambiguous cases surface for a decision');
+  await expect(chap).toContainText("encrypted backups tied to the original installation's Keystore key. These backups cannot restore data after uninstalling the app or on another device.");
+  await expect(chap).toContainText("Every budgeting app I'd used added friction");
+  await expect(page.getByRole('heading', { name: 'Friction is the enemy', exact: true })).toBeVisible();
+  for (const claim of ['bank connections', 'receipts', 'full export', 'lives in the repo']) {
+    await expect(chap).not.toContainText(claim);
+  }
+
+  await page.goto('/projects/jukdata/');
+  const jukdata = page.locator('.project-page');
+  await expect(jukdata).toContainText('Hero entrance and project-tab transitions run on Motion.');
+  await expect(jukdata).toContainText('Reduced-motion users get a static treatment.');
+  await expect(jukdata).toContainText('Cookie consent is managed through Silktide, with Google Consent Mode defaults.');
+  await expect(jukdata).toContainText('Complete product - services, case studies, technology breakdowns, and a contact flow, built out fully.');
+  await expect(jukdata).not.toContainText('Google Tag Manager');
+  await expect(jukdata).not.toContainText('Scroll reveals run on Motion.');
+});
