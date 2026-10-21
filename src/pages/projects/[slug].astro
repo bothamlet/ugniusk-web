@@ -21,7 +21,7 @@ const { project } = Astro.props;
 <BaseLayout
   title={`${project.title} - ${site.name}`}
   description={project.summary}
-  ogImage={project.ogImage ?? '/og-image.png'}
+  ogImage={project.ogImage}
   ogImageAlt={project.ogImageAlt}
 >
   <ProjectDetail project={project} />

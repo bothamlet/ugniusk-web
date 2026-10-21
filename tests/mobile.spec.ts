@@ -504,13 +504,13 @@ test('built pages, robots and sitemaps advertise the public domain', () => {
 });
 
 // Every shipped social card is a 1200x630 PNG, so the expected image, alt text
-// and dimensions live here as literals: a page that regresses to the generic
-// fallback, or describes a cropped card inaccurately, fails this table.
+// and dimensions live here as literals: a page that regresses to the wrong card,
+// or describes a cropped card inaccurately, fails this table.
 const socialCards: Record<string, { file: string; image: string; alt: string }> = {
   '/': {
     file: '/index.html',
-    image: '/og-image.png',
-    alt: 'Ugnius Liberman - designer and developer, portfolio and journal, on a paper-white field with a pink accent',
+    image: '/og/this-site-card.png',
+    alt: 'Ugnius Liberman - off-white and magenta UGNIUS LIBERMAN wordmark on black, with the social icons along the bottom edge',
   },
   '/projects/todays-brief/': {
     file: '/projects/todays-brief/index.html',
@@ -554,11 +554,11 @@ test('built pages emit their social card image, alt text and fixed dimensions', 
     expect(metaContent(html, 'og:image:type'), path).toBe('image/png');
   }
 
-  // Home keeps the generic card; each project carries its own, never the fallback.
+  // Home reuses the This Site card; each project carries its own, never the fallback.
   const projectCards = Object.entries(socialCards)
     .filter(([path]) => path !== '/')
     .map(([, card]) => card.image);
-  expect(socialCards['/'].image).toBe('/og-image.png');
+  expect(socialCards['/'].image).toBe(socialCards['/projects/this-site/'].image);
   expect(new Set(projectCards).size).toBe(5);
   expect(projectCards).not.toContain('/og-image.png');
 });
@@ -576,13 +576,13 @@ test('social cards are real 1200x630 PNGs served as image/png', async ({ page })
   };
 
   const images = [...new Set(Object.values(socialCards).map((card) => card.image))];
-  expect(images).toHaveLength(6);
+  expect(images).toHaveLength(5);
   for (const image of images) {
     expect(pngSize(image), image).toEqual({ width: 1200, height: 630 });
   }
 
-  // The two new cards are reachable over HTTP with the PNG content type.
-  for (const image of ['/og/todays-brief-card.png', '/og/surface-runoff-card.png']) {
+  // The default card and the two new cards are reachable over HTTP with the PNG content type.
+  for (const image of ['/og/this-site-card.png', '/og/todays-brief-card.png', '/og/surface-runoff-card.png']) {
     const response = await page.request.get(image);
     expect(response.status(), image).toBe(200);
     expect(response.headers()['content-type'], image).toBe('image/png');

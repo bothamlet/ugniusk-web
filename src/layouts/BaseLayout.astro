@@ -10,16 +10,17 @@ import { site } from '../data/site';
 interface Props {
   title: string;
   description: string;
+  /** Social card image; defaults to the This Site card, which renders the homepage wordmark. */
   ogImage?: string;
-  /** Alt text for the social card itself; defaults to a description of the portfolio card. */
+  /** Alt text for the social card itself; defaults to a description of the homepage card. */
   ogImageAlt?: string;
 }
 
 const {
   title,
   description,
-  ogImage = '/og-image.png',
-  ogImageAlt = "Ugnius Liberman - designer and developer, portfolio and journal, on a paper-white field with a pink accent",
+  ogImage = '/og/this-site-card.png',
+  ogImageAlt = 'Ugnius Liberman - off-white and magenta UGNIUS LIBERMAN wordmark on black, with the social icons along the bottom edge',
 } = Astro.props;
 // `site` is set in astro.config.mjs, but Astro types it as optional. Falling back
 // to the request URL keeps the build safe if that config ever regresses.
@@ -57,7 +58,7 @@ const ogImageUrl = new URL(ogImage, siteUrl);
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImageUrl} />
     <meta property="og:image:alt" content={ogImageAlt} />
-    <!-- Every shipped social card is a 1200x630 PNG, the generic fallback included. -->
+    <!-- Every shipped social card is a 1200x630 PNG, the default card included. -->
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:type" content="image/png" />
