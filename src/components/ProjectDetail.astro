@@ -35,13 +35,23 @@ const technicalHeading = sectionByLabel('Technical')?.body;
           <span>All projects</span>
         </a>
 
-        <h1
-          class:list={["project-title", project.title.length > 15 && "project-title--long"]}
-          data-scramble="scroll"
-        >
-          {project.title}
-        </h1>
-
+        <div class:list={["project-title-row", project.title.length > 15 && "project-title-row--long", project.repositoryUrl && "project-title-row--repo"]}>
+          <h1
+            class:list={["project-title", project.title.length > 15 && "project-title--long"]}
+            data-scramble="scroll"
+          >{project.title}</h1>{project.repositoryUrl && (
+            <a
+              class="project-repo cursor-hover"
+              href={project.repositoryUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`View ${project.title} repository on GitHub`}
+              aria-label={`View ${project.title} repository on GitHub`}
+            >
+              <SocialIcon label="GitHub" size={18} />
+            </a>
+          )}
+        </div>
       </div>
 
       <div class="project-first-view__right">
@@ -63,21 +73,9 @@ const technicalHeading = sectionByLabel('Technical')?.body;
         <span class="project-meta-item__label">Stack</span>
         <span class="project-meta-item__value" data-scramble="scroll">{project.stack.join(' · ')}</span>
       </div>
-      <div class:list={["project-meta-item", project.repositoryUrl && "project-meta-item--repo"]}>
+      <div class="project-meta-item">
         <span class="project-meta-item__label">Status</span>
         <span class="project-meta-item__value" data-scramble="scroll">{project.status}</span>
-        {project.repositoryUrl && (
-          <a
-            class="project-repo cursor-hover"
-            href={project.repositoryUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={`View ${project.title} repository on GitHub`}
-            aria-label={`View ${project.title} repository on GitHub`}
-          >
-            <SocialIcon label="GitHub" size={18} />
-          </a>
-        )}
       </div>
     </div>
 
@@ -258,8 +256,25 @@ const technicalHeading = sectionByLabel('Technical')?.body;
   }
 
   /* ── Title ── */
+  /* The heading flows inline so the repository mark follows the final rendered
+     line of the title instead of being pushed to the column edge by a full-width
+     block box. The row keeps the title's trailing space; the mark adds an 8px
+     lead-in to its 44px target. */
+  .project-title-row {
+    margin-bottom: clamp(3.5rem, 7vw, 6.5rem);
+  }
+
+  /* The mark's 44px target is inline content, so reserve its width from the
+     title's measure. Without that strip a title that almost fills the column
+     wraps the mark onto a line of its own; the negative right margin below
+     lets the mark hang back into the reserved space. */
+  .project-title-row--repo {
+    padding-right: 3.25rem;
+  }
+
   .project-title {
-    margin: 0 0 clamp(3.5rem, 7vw, 6.5rem);
+    display: inline;
+    margin: 0;
     font-family: var(--font-display);
     font-size: clamp(3.5rem, 7vw, 7.5rem);
     font-weight: 900;
@@ -276,10 +291,37 @@ const technicalHeading = sectionByLabel('Technical')?.body;
      first two words on one line. */
   .project-title--long {
     font-size: clamp(2.75rem, 5vw, 4.75rem);
-    /* The header bottom-aligns the summary, so the title's trailing space sets
-       the row height and pushes the summary down with it. A two-line title
-       needs less of that than a one-line one. */
+  }
+
+  /* The header bottom-aligns the summary, so the title's trailing space sets
+     the row height and pushes the summary down with it. A two-line title
+     needs less of that than a one-line one. */
+  .project-title-row--long {
     margin-bottom: clamp(1.5rem, 3vw, 3rem);
+  }
+
+  .project-repo {
+    display: inline-flex;
+    /* Baseline alignment puts the mark on the title's last line, like a glyph. */
+    vertical-align: baseline;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-left: 0.5rem;
+    margin-right: -3.25rem;
+    color: #070707;
+    transition: color 200ms ease-out;
+  }
+
+  .project-repo:hover,
+  .project-repo:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .project-repo:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   /* ── Details stacked below title ── */
@@ -323,8 +365,8 @@ const technicalHeading = sectionByLabel('Technical')?.body;
   .project-meta-row {
     display: grid;
     /* Zero-minimum tracks: a plain `1fr` floors at the longest value's
-       max-content width, which pushed the fourth cell (and the repository mark
-       in its gutter) past the row on 901-1000px viewports. */
+       max-content width, which pushed the fourth cell past the row on
+       901-1000px viewports. */
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 3rem;
     padding: clamp(2.5rem, 4vw, 3.5rem) 0;
@@ -366,42 +408,6 @@ const technicalHeading = sectionByLabel('Technical')?.body;
        single word cannot fit. */
     white-space: normal;
     overflow-wrap: anywhere;
-  }
-
-  /* The repository mark sits in the Status cell's reserved right gutter, so the
-     fourth field keeps its size and the mark adds no height. Only the cells that
-     have a repository reserve the 44px touch target. */
-  .project-meta-item--repo {
-    position: relative;
-    /* Start-aligned so the mark stays beside the Status text when a wrapped
-       Type/Stack value makes the row taller than this cell. */
-    align-self: start;
-    min-height: 2.75rem;
-    padding-right: 2.75rem;
-  }
-
-  .project-repo {
-    position: absolute;
-    top: 50%;
-    right: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    color: #070707;
-    transform: translateY(-50%);
-    transition: color 200ms ease-out;
-  }
-
-  .project-repo:hover,
-  .project-repo:focus-visible {
-    color: var(--color-accent);
-  }
-
-  .project-repo:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
   }
 
   /* ════════════════════════════════
@@ -568,8 +574,7 @@ const technicalHeading = sectionByLabel('Technical')?.body;
       margin-bottom: 1.5rem;
     }
 
-    .project-title,
-    .project-title--long {
+    .project-title-row {
       margin-bottom: 0;
     }
 

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/_vercel/**', route => route.fulfill({ status: 204 }));
@@ -341,26 +341,37 @@ const repoLinkName = (title: string) => `View ${title} repository on GitHub`;
 
 interface Box { x: number; y: number; width: number; height: number }
 
-const overlaps = (a: Box, b: Box) =>
-  a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+// The title flows inline, so its bounding box spans every line fragment. The
+// repository mark follows the final rendered line, so measure that line's text.
+const lastTextLine = (heading: Locator): Promise<Box> =>
+  heading.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const rects = [...range.getClientRects()];
+    const last = rects.reduce((bottomMost, rect) =>
+      rect.bottom > bottomMost.bottom ? rect : bottomMost, rects[0]);
+    return { x: last.x, y: last.y, width: last.width, height: last.height };
+  });
 
 for (const [slug, project] of Object.entries(repositories)) {
-  test(`${slug}: the Status cell carries the repository link`, async ({ page }) => {
+  test(`${slug}: the title row carries the repository link`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`/projects/${slug}/`);
 
-    // The fourth field is still Status: four meta items, same value, one link.
-    await expect(page.locator('.project-meta-item')).toHaveCount(4);
-    const status = page.locator('.project-meta-item').nth(3);
-    await expect(status.locator('.project-meta-item__label')).toHaveText('Status');
-    await expect(status.locator('.project-meta-item__value')).toHaveText(project.status);
+    const row = page.locator('.project-title-row');
+    await expect(row).toHaveCount(1);
+    const heading = row.locator('h1');
+    await expect(heading).toHaveText(project.title);
 
-    const link = status.getByRole('link', { name: repoLinkName(project.title) });
+    // Adjacent sibling selector: the link follows the h1 itself, not a wrapper.
+    const link = row.locator('h1 + .project-repo');
     await expect(link).toHaveCount(1);
+    await expect(link).toHaveAccessibleName(repoLinkName(project.title));
     await expect(link).toHaveAttribute('href', project.url);
     await expect(link).toHaveAttribute('target', '_blank');
     await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     await expect(link).toHaveAttribute('title', repoLinkName(project.title));
+    await expect(link).toHaveAttribute('aria-label', repoLinkName(project.title));
 
     const icon = await link.locator('svg').boundingBox();
     expect(icon!.width).toBeGreaterThanOrEqual(18);
@@ -368,23 +379,42 @@ for (const [slug, project] of Object.entries(repositories)) {
     expect(icon!.height).toBeGreaterThanOrEqual(18);
     expect(icon!.height).toBeLessThanOrEqual(19);
 
-    const [statusBox, linkBox] = [await status.boundingBox(), await link.boundingBox()];
+    // The 44px target hugs the last word: 8px of margin to the target's edge.
+    const [lineBox, linkBox] = [await lastTextLine(heading), await link.boundingBox()];
     expect(linkBox!.width).toBeGreaterThanOrEqual(44);
     expect(linkBox!.height).toBeGreaterThanOrEqual(44);
-    expect(linkBox!.x).toBeGreaterThanOrEqual(statusBox!.x);
-    expect(linkBox!.x + linkBox!.width).toBeLessThanOrEqual(statusBox!.x + statusBox!.width + 1);
+    const gap = linkBox!.x - (lineBox.x + lineBox.width);
+    expect(gap).toBeGreaterThanOrEqual(0);
+    expect(gap).toBeLessThanOrEqual(12);
+    const sharesLastLine =
+      linkBox!.y < lineBox.y + lineBox.height && lineBox.y < linkBox!.y + linkBox!.height;
+    expect(sharesLastLine, 'mark stays on the last title line').toBe(true);
 
-    // The server-rendered HTML carries the same link.
+    // The fourth field is still Status: four meta items, same value, no link.
+    await expect(page.locator('.project-meta-item')).toHaveCount(4);
+    const status = page.locator('.project-meta-item').nth(3);
+    await expect(status.locator('.project-meta-item__label')).toHaveText('Status');
+    await expect(status.locator('.project-meta-item__value')).toHaveText(project.status);
+    await expect(status.getByRole('link')).toHaveCount(0);
+
+    // The server-rendered HTML carries the link in the header, not the meta row.
     const html = await (await page.request.get(`/projects/${slug}/`)).text();
+    const rowStart = html.indexOf('class="project-title-row');
+    const linkStart = html.indexOf('class="project-repo cursor-hover"');
+    const metaStart = html.indexOf('class="project-meta-row"');
+    expect(rowStart).toBeGreaterThan(-1);
+    expect(linkStart).toBeGreaterThan(rowStart);
+    expect(linkStart).toBeLessThan(metaStart);
+    expect(html).toMatch(/<\/h1><a class="project-repo cursor-hover"/);
     expect(html).toContain(`href="${project.url}"`);
   });
 }
 
-test('Status repository link is keyboard reachable with a visible focus ring', async ({ page }) => {
+test('repository link is keyboard reachable with a visible focus ring', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/projects/jukdata/');
-  // The back link is the last tab stop before the meta row, so one Tab lands on
-  // the repository link.
+  // The back link is the last tab stop before the title row, so one Tab lands
+  // on the repository link.
   await page.locator('.project-back').focus();
   await page.keyboard.press('Tab');
   const link = page.locator('.project-repo');
@@ -394,24 +424,25 @@ test('Status repository link is keyboard reachable with a visible focus ring', a
   expect(await link.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe('solid');
 });
 
-for (const width of [320, 390, 430, 900, 901, 1000, 1440]) {
-  test(`Status repository link keeps the meta card intact at ${width}px`, async ({ page }) => {
+for (const width of [320, 390, 430, 600, 900, 901, 1000, 1440]) {
+  test(`repository link stays beside the title without clipping at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     for (const [slug, project] of Object.entries(repositories)) {
       await page.goto(`/projects/${slug}/`);
       await page.evaluate(() => document.fonts.ready);
-      const status = page.locator('.project-meta-item').nth(3);
-      const link = status.getByRole('link', { name: repoLinkName(project.title) });
-      const [cardBox, rowBox, statusBox, labelBox, valueBox, linkBox, iconBox] = [
+      const row = page.locator('.project-title-row');
+      const heading = row.locator('h1');
+      const link = row.getByRole('link', { name: repoLinkName(project.title) });
+      const [cardBox, rowBox, lineBox, linkBox, iconBox] = [
         (await page.locator('.project-detail').boundingBox())!,
-        (await page.locator('.project-meta-row').boundingBox())!,
-        (await status.boundingBox())!,
-        (await status.locator('.project-meta-item__label').boundingBox())!,
-        (await status.locator('.project-meta-item__value').boundingBox())!,
+        (await row.boundingBox())!,
+        await lastTextLine(heading),
         (await link.boundingBox())!,
         (await link.locator('svg').boundingBox())!,
       ];
       const where = `${slug} at ${width}px`;
+
+      await expect(heading, where).toHaveText(project.title);
 
       // 44px touch target around an 18px mark.
       expect(linkBox.width, where).toBeGreaterThanOrEqual(44);
@@ -421,9 +452,17 @@ for (const width of [320, 390, 430, 900, 901, 1000, 1440]) {
       expect(iconBox.height, where).toBeGreaterThanOrEqual(18);
       expect(iconBox.height, where).toBeLessThanOrEqual(19);
 
-      // Inside the viewport, the meta card and the meta row. `.project-page`
-      // clips overflow-x, so document.scrollWidth stays pinned to the viewport
-      // even when the mark hangs off the edge; only the boxes show that.
+      // Immediately right of the last rendered title word, never floated to the
+      // column edge and never pushed onto a line of its own.
+      expect(linkBox.x - (lineBox.x + lineBox.width), where).toBeGreaterThanOrEqual(0);
+      expect(linkBox.x - (lineBox.x + lineBox.width), where).toBeLessThanOrEqual(12);
+      const sharesLastLine =
+        linkBox.y < lineBox.y + lineBox.height && lineBox.y < linkBox.y + linkBox.height;
+      expect(sharesLastLine, `${where} mark shares the last title line`).toBe(true);
+
+      // Inside the viewport and the card. `.project-page` clips overflow-x, so
+      // document.scrollWidth stays pinned to the viewport even when a box hangs
+      // off the edge; only the boxes show that.
       expect(linkBox.x, where).toBeGreaterThanOrEqual(0);
       expect(linkBox.x + linkBox.width, where).toBeLessThanOrEqual(width);
       expect(rowBox.x, where).toBeGreaterThanOrEqual(cardBox.x);
@@ -433,17 +472,9 @@ for (const width of [320, 390, 430, 900, 901, 1000, 1440]) {
       expect(linkBox.y, where).toBeGreaterThanOrEqual(rowBox.y);
       expect(linkBox.y + linkBox.height, where).toBeLessThanOrEqual(rowBox.y + rowBox.height + 1);
 
-      // Still in the Status cell, clear of its label and value.
-      expect(linkBox.x, where).toBeGreaterThanOrEqual(statusBox.x);
-      expect(linkBox.x + linkBox.width, where).toBeLessThanOrEqual(statusBox.x + statusBox.width + 1);
-      expect(linkBox.y, where).toBeGreaterThanOrEqual(statusBox.y);
-      expect(linkBox.y + linkBox.height, where).toBeLessThanOrEqual(statusBox.y + statusBox.height + 1);
-      expect(overlaps(linkBox, labelBox), where).toBe(false);
-      expect(overlaps(linkBox, valueBox), where).toBe(false);
-      // A wrapped Type or Stack value makes the row taller than the Status
-      // cell; the mark must stay beside the Status text, not sink to the
-      // middle of the row.
-      expect(linkBox.y - statusBox.y, where).toBeLessThanOrEqual(10);
+      // The title text itself stays inside the card, unclipped.
+      expect(lineBox.x, where).toBeGreaterThanOrEqual(cardBox.x);
+      expect(lineBox.x + lineBox.width, where).toBeLessThanOrEqual(cardBox.x + cardBox.width);
     }
   });
 }
@@ -491,15 +522,19 @@ for (const width of [901, 1000, 1440]) {
   });
 }
 
-test('Surface Runoff leaves the Status cell without a repository link', async ({ page }) => {
+test('Surface Runoff leaves the title row and Status cell without a repository link', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/projects/surface-runoff/');
+  const row = page.locator('.project-title-row');
+  await expect(row.locator('h1')).toHaveText('Surface Runoff Model');
+  // With no URL the row holds only the heading, so it gains no gap or width.
+  await expect(row.locator(':scope > *')).toHaveCount(1);
+  await expect(page.locator('.project-repo')).toHaveCount(0);
   const status = page.locator('.project-meta-item').nth(3);
   await expect(page.locator('.project-meta-item')).toHaveCount(4);
   await expect(status.getByRole('link')).toHaveCount(0);
-  await expect(page.locator('.project-repo')).toHaveCount(0);
   await expect(status.locator('.project-meta-item__value')).toHaveText('Completed');
-  // Without a URL the cell keeps its original box: no reserved gutter.
+  // The Status cell keeps its plain box: no reserved gutter.
   const style = await status.evaluate((element) => {
     const css = getComputedStyle(element);
     return { position: css.position, paddingRight: css.paddingRight };
@@ -507,4 +542,5 @@ test('Surface Runoff leaves the Status cell without a repository link', async ({
   expect(style).toEqual({ position: 'static', paddingRight: '0px' });
   const html = await (await page.request.get('/projects/surface-runoff/')).text();
   expect(html).not.toContain('class="project-repo');
+  expect(html).not.toContain('project-meta-item--repo');
 });
