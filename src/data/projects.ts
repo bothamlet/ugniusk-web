@@ -90,12 +90,12 @@ const allProjects: Project[] = [
 			{
 				label: "Overview",
 				body:
-					"Each issue is divided into <strong>World</strong>, <strong>Europe</strong>, <strong>Lietuva</strong>, <strong>Tech</strong>, <strong>Sports</strong>, and <strong>Other</strong>, with stories ranked by significance rather than recency. Developing stories carry across days, and major world stories can place coverage from different editorial leanings side by side.",
+					"Each issue is divided into World, Europe, Lietuva, Tech, Sports, and Other, with stories ranked by significance rather than recency. Developing stories carry across days, and major world stories can place coverage from different editorial leanings side by side.",
 			},
 			{
 				label: "Key features",
 				body:
-					"<strong>Complete system</strong> - source collection, clustering, classification, story tracking, cross-source coverage, rendering, and automatic Telegram delivery.",
+					"Complete system - source collection, clustering, classification, story tracking, cross-source coverage, rendering, and automatic Telegram delivery.",
 			},
 			{
 				label: "Technical",

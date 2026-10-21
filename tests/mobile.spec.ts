@@ -346,6 +346,19 @@ test('project pages carry the corrected factual claims', async ({ page }) => {
   await expect(jukdata).toContainText('Complete product - services, case studies, technology breakdowns, and a contact flow, built out fully.');
   await expect(jukdata).not.toContainText('Google Tag Manager');
   await expect(jukdata).not.toContainText('Scroll reveals run on Motion.');
+
+  // Today's Brief keeps both Overview paragraphs as plain body copy: the six
+  // section names and "Complete system" are no longer bolded inline.
+  await page.goto('/projects/todays-brief/');
+  const briefOverview = page.locator('.project-editorial').first();
+  await expect(briefOverview.locator('.project-editorial-body')).toHaveCount(2);
+  await expect(briefOverview.locator('strong, b')).toHaveCount(0);
+  await expect(briefOverview).toContainText('Each issue is divided into World, Europe, Lietuva, Tech, Sports, and Other');
+  await expect(briefOverview).toContainText('Complete system - source collection, clustering, classification');
+  for (const body of await briefOverview.locator('.project-editorial-body').all()) {
+    expect(await body.evaluate((element) => getComputedStyle(element).fontWeight)).toBe('400');
+  }
+  await expect(briefOverview.locator('.project-editorial-heading')).toHaveCSS('font-weight', '900');
 });
 
 interface ProjectMeta {
