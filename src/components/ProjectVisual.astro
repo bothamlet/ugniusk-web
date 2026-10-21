@@ -1,4 +1,6 @@
 ---
+import { imageFor, imageSrcSet } from '../data/images';
+
 interface Props {
 	src?: string;
 	alt: string;
@@ -9,26 +11,13 @@ interface Props {
 
 const { src, alt, eager = false, code, inset = false } = Astro.props;
 
-// Intrinsic dimensions of the shipped image assets - reserves layout space (no CLS).
-const IMAGE_DIMS: Record<string, { w: number; h: number }> = {
-	'/chap-card-full.webp': { w: 3840, h: 1920 },
-	'/images/projects/chap-2.webp': { w: 6688, h: 3764 },
-	'/images/projects/chap-3.webp': { w: 6688, h: 3764 },
-	'/jukdata-card.webp': { w: 2560, h: 1440 },
-	'/screenshots/this-site-card.webp': { w: 2880, h: 1620 },
-	'/images/projects/jukdata-2.webp': { w: 2560, h: 699 },
-	'/images/projects/jukdata-3.webp': { w: 2560, h: 1344 },
-	'/screenshots/this-site-overview.webp': { w: 2560, h: 1288 },
-	'/screenshots/this-site-detail.webp': { w: 2560, h: 1291 },
-	'/images/projects/todays-brief-card.webp': { w: 3840, h: 2160 },
-	'/images/projects/todays-brief-world.webp': { w: 5120, h: 3840 },
-	'/images/projects/surface-runoff-card.webp': { w: 894, h: 503 },
-	'/images/projects/surface-runoff-rain-storm.webp': { w: 1400, h: 770 },
-	'/images/projects/surface-runoff-water-depth.webp': { w: 1400, h: 783 },
-	'/images/projects/surface-runoff-soil-saturation.webp': { w: 1400, h: 770 },
-};
-
-const dims = src ? (IMAGE_DIMS[src] ?? { w: 1920, h: 1080 }) : undefined;
+// The shipped asset's own pixels, read from the file, reserve layout space (no CLS).
+const image = src ? imageFor(src) : undefined;
+const width = image?.width ?? 1920;
+const height = image?.height ?? 1080;
+const srcSet = src ? imageSrcSet(src) : undefined;
+// A full-bleed band is the viewport; the inset variant is 80% of it, capped at 64rem.
+const sizes = inset ? '(min-width: 80rem) 64rem, 80vw' : '100vw';
 ---
 
 <div class:list={["project-visual-full", { "project-visual-full--inset": inset }]}>
@@ -37,11 +26,14 @@ const dims = src ? (IMAGE_DIMS[src] ?? { w: 1920, h: 1080 }) : undefined;
       <a class="project-visual-image cursor-hover" href={src} target="_blank" rel="noopener noreferrer" aria-label={`Open original image: ${alt}`}>
         <img
           src={src}
+          srcset={srcSet}
+          sizes={srcSet ? sizes : undefined}
           alt={alt}
           loading={eager ? 'eager' : 'lazy'}
+          fetchpriority={eager ? 'high' : undefined}
           decoding="async"
-          width={dims?.w}
-          height={dims?.h}
+          width={width}
+          height={height}
         />
       </a>
     ) : (

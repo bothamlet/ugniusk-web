@@ -67,7 +67,7 @@ const allProjects: Project[] = [
 		repositoryUrl: "https://github.com/bothamlet/todays-brief",
 		image: "/images/projects/todays-brief-card.webp",
 		imageAlt:
-			"Today's Brief - the editorial wordmark above the six section markers, one filled",
+			"Today's Brief - six section markers, one filled, above the TODAY'S BRIEF wordmark",
 		ogImage: "/og/todays-brief-card.png",
 		ogImageAlt:
 			"Today's Brief - six section markers, one filled teal, above the TODAY'S BRIEF editorial wordmark on a cream paper field",
@@ -76,7 +76,7 @@ const allProjects: Project[] = [
 			"/images/projects/todays-brief-world.webp",
 		],
 		galleryAlt: [
-			"Today's Brief - the editorial wordmark above the six section markers, one filled",
+			"Today's Brief - six section markers, one filled, above the TODAY'S BRIEF wordmark",
 			"Today's Brief World section - newspaper-style layout with lead and secondary stories, photographs, headlines, and summaries",
 		],
 		technical:
@@ -120,16 +120,17 @@ const allProjects: Project[] = [
 		ogImage: "/og/this-site-card.png",
 		ogImageAlt:
 			"This Site - the UGNIUS LIBERMAN wordmark in off-white and magenta on black, with the social icons along the bottom edge",
-		imageAlt: "This Site homepage - the selected work carousel and editorial intro",
+		imageAlt:
+			"This Site - the UGNIUS LIBERMAN wordmark hero, with the social icons along the bottom edge",
 		gallery: [
 			"/screenshots/this-site-card.webp",
 			"/screenshots/this-site-overview.webp",
 			"/screenshots/this-site-detail.webp",
 		],
 		galleryAlt: [
-			"This Site homepage - the selected work carousel and editorial intro",
-			"This Site - the editorial statement section with the photography-led layout",
-			"This Site - a project page with the technical column and reflection",
+			"This Site - the UGNIUS LIBERMAN wordmark hero, with the social icons along the bottom edge",
+			"This Site - an earlier build's statement page: the DRIVEN BY CURIOSITY headline beside a How I work column",
+			"This Site - an earlier build's site ender: BASED ON THE ORIGINAL WORKS OF UGNIUS LIBERMAN",
 		],
 		technical:
 			"The motion layer is hand-rolled rather than framework-driven - Lenis for scroll physics, Anime.js for reveal transitions, a custom blend-mode cursor, and a hand-written text-scramble effect.",
@@ -223,8 +224,8 @@ const allProjects: Project[] = [
 		],
 		galleryAlt: [
 			"JUKdata - corporate website homepage with a warm orange hero",
-			"JUKdata - the services section with technology breakdowns",
-			"JUKdata - the technologies and case studies section",
+			"JUKdata - the technology strip of partner logos, headed Technologijos, su kuriomis dirbame",
+			"JUKdata - the contact section headed Pradėkime pokalbį, with contact details and a message form",
 		],
 		technical:
 			"A WebGL simplex-noise shader reacts to the cursor over a hand-written canvas fallback. Hero entrance and project-tab transitions run on Motion. The technology ticker is pure CSS. Reduced-motion users get a static treatment.",
@@ -315,7 +316,7 @@ const allProjects: Project[] = [
 		galleryAlt: [
 			"Rain intensity over the 50 by 50 metre grid, shown as a Gaussian storm moving across it",
 			"Water depth on a 3D surface plot of the terrain as runoff accumulates downslope",
-			"Soil saturation after infiltration, on a logarithmic scale, with unsaturated terrain untinted",
+			"Soil saturation at t=0.00 min on a logarithmic scale, with the terrain untinted",
 		],
 		technical:
 			"The core is a fixed-timestep loop over a 50×50 grid. Rainfall is injected per cell from a Gaussian storm that moves deterministically across the terrain; infiltration is limited by both available surface water and remaining soil capacity, and saturation is hard-capped to keep floating-point overshoot out of the water balance. Each frame is rendered twice - once for water depth, once for soil saturation - then stitched into looping GIFs with imageio.",

@@ -1,6 +1,7 @@
 ---
 import type { Project } from '../data/projects';
 import { projects } from '../data/projects';
+import { imageSrcSet } from '../data/images';
 import { site } from '../data/site';
 import SiteFooter from './SiteFooter.astro';
 import ProjectVisual from './ProjectVisual.astro';
@@ -27,6 +28,8 @@ const technicalHeading = sectionByLabel('Technical')?.body;
 // ProjectVisual would draw its full-bleed placeholder band, so the slot is
 // rendered only when the project actually has one.
 const thirdVisual = project.gallery?.[2];
+// More Works draws the project's card image at roughly half the content width.
+const moreWorkSizes = '(max-width: 600px) 92vw, 46vw';
 ---
 
 <main id="main" class="project-page">
@@ -148,24 +151,27 @@ const thirdVisual = project.gallery?.[2];
     <section class="project-more">
       <h2 class="project-more__title" data-scramble="scroll">More Works</h2>
       <div class="project-more__grid">
-        {relatedProjects.map((p) => (
-          <a class="project-more__card cursor-hover" href={`/projects/${p.slug}/`}>
-            <div class="project-more__img">
-              {(p.cardImage ?? p.image) ? (
-                <>
-                  <img class="project-more__img-main" src={p.cardImage ?? p.image} alt={p.title} loading="lazy" />
-                  <div class="project-more__img-ghost">
-                    <img src={p.cardImage ?? p.image} alt="" aria-hidden="true" loading="lazy" />
-                  </div>
-                </>
-              ) : (
-                <div class="project-more__img-placeholder"></div>
-              )}
-            </div>
-            <h3 class="project-more__name">{p.title}</h3>
-            <span class="project-more__type">{p.type}</span>
-          </a>
-        ))}
+        {relatedProjects.map((p) => {
+          const moreWorkImage = p.cardImage ?? p.image;
+          return (
+            <a class="project-more__card cursor-hover" href={`/projects/${p.slug}/`}>
+              <div class="project-more__img">
+                {moreWorkImage ? (
+                  <>
+                    <img class="project-more__img-main" src={moreWorkImage} srcset={imageSrcSet(moreWorkImage)} sizes={moreWorkSizes} alt={p.title} loading="lazy" decoding="async" />
+                    <div class="project-more__img-ghost">
+                      <img src={moreWorkImage} srcset={imageSrcSet(moreWorkImage)} sizes={moreWorkSizes} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+                    </div>
+                  </>
+                ) : (
+                  <div class="project-more__img-placeholder"></div>
+                )}
+              </div>
+              <h3 class="project-more__name">{p.title}</h3>
+              <span class="project-more__type">{p.type}</span>
+            </a>
+          );
+        })}
       </div>
     </section>
   </article>

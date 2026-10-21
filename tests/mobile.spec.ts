@@ -1,5 +1,6 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { test, expect, type Locator, type Page } from '@playwright/test';
+import { imageFor, imageSrcSet, responsiveImages } from '../src/data/images';
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/_vercel/**', route => route.fulfill({ status: 204 }));
@@ -100,6 +101,32 @@ const webpSize = (path: string) => {
   expect(chunk, path).toBe('VP8 ');
   expect(bytes.subarray(23, 26), `${path} VP8 start code`).toEqual(Buffer.from([0x9d, 0x01, 0x2a]));
   return { width: bytes.readUInt16LE(26) & 0x3fff, height: bytes.readUInt16LE(28) & 0x3fff };
+};
+
+// The three Surface Runoff figures are 160-frame animated WebPs. These fixtures
+// name them once: a resized copy would drop every frame but the first, so they
+// keep their original file (see the animation test further down).
+const animatedFigures = [
+  '/images/projects/surface-runoff-rain-storm.webp',
+  '/images/projects/surface-runoff-water-depth.webp',
+  '/images/projects/surface-runoff-soil-saturation.webp',
+];
+
+// Count the frames of a shipped WebP by walking its RIFF chunks: an animated
+// file carries one ANMF chunk per frame, a still file none.
+const webpFrameCount = (path: string) => {
+  const bytes = readFileSync(new URL(`../dist${path}`, import.meta.url));
+  expect(bytes.toString('ascii', 0, 4), `${path} RIFF`).toBe('RIFF');
+  expect(bytes.toString('ascii', 8, 12), `${path} WEBP`).toBe('WEBP');
+  let offset = 12;
+  let frames = 0;
+  while (offset + 8 <= bytes.length) {
+    const id = bytes.toString('ascii', offset, offset + 4);
+    const size = bytes.readUInt32LE(offset + 4);
+    if (id === 'ANMF') frames += 1;
+    offset += 8 + size + (size % 2);
+  }
+  return Math.max(frames, 1);
 };
 
 test('This Site hero ships a 2880x1620 export with honest responsive variants', async ({ page }) => {
@@ -1231,4 +1258,451 @@ test('planned cards serve their assets and stay out of routes, the sitemap and M
   for (const more of await moreWorks.all()) {
     expect((await more.textContent())?.toLowerCase()).not.toMatch(/diucon|horseflight/);
   }
+});
+
+// ── Responsive image delivery ─────────────────────────────────────────────────
+//
+// Detail galleries and More Works used to request the full-resolution file at
+// every viewport. The metadata table drives both the generated variants and the
+// descriptors, so the tests below check the shipped bytes rather than the table
+// alone: a descriptor that does not equal its file's real width would make the
+// browser pick a candidate it cannot fill.
+
+test('every declared variant is a real file at its descriptor width', () => {
+  const sources = Object.entries(responsiveImages);
+  expect(sources.length).toBeGreaterThan(0);
+
+  for (const [src, image] of sources) {
+    expect(webpSize(src), src).toEqual({ width: image.width, height: image.height });
+    for (const width of image.variants) {
+      const variant = src.replace(/\.webp$/, `-${width}.webp`);
+      const size = webpSize(variant);
+      expect(size.width, variant).toBe(width);
+      // A resize keeps the source's ratio; the odd pixel is rounding.
+      expect(Math.abs(size.height - (image.height * width) / image.width), variant).toBeLessThanOrEqual(1);
+      // A low-resolution source never gets an enlarged variant.
+      expect(width, `${variant} would enlarge ${src}`).toBeLessThan(image.width);
+    }
+  }
+});
+
+test('srcset descriptors are the files themselves, ending at the untouched original', () => {
+  for (const [src, image] of Object.entries(responsiveImages)) {
+    // An animated source has no resized siblings, so it offers no srcset at all.
+    if (image.variants.length === 0) {
+      expect(imageSrcSet(src), src).toBeUndefined();
+      expect(animatedFigures, src).toContain(src);
+      continue;
+    }
+
+    const candidates = imageSrcSet(src)!.split(', ').map((entry) => {
+      const [url, descriptor] = entry.split(' ');
+      return { url: url!, width: Number(descriptor!.replace('w', '')) };
+    });
+
+    expect(candidates.map((candidate) => candidate.width), src).toEqual([...image.variants, image.width]);
+    for (const candidate of candidates) {
+      expect(webpSize(candidate.url).width, candidate.url).toBe(candidate.width);
+    }
+    expect(candidates.at(-1)!.url, src).toBe(src);
+  }
+});
+
+test('built detail pages offer responsive candidates for galleries and More Works', () => {
+  const moreSizes = '(max-width: 600px) 92vw, 46vw';
+  const gallerySizes = ['100vw', '(min-width: 80rem) 64rem, 80vw'];
+  const pages = ['todays-brief', 'this-site', 'chap', 'jukdata', 'surface-runoff'];
+
+  for (const slug of pages) {
+    const html = readDist(`/projects/${slug}/index.html`);
+    const images = [...html.matchAll(/<img ([^>]*)>/g)].map((match) => match[1]!);
+    expect(images.length, slug).toBeGreaterThan(0);
+
+    for (const tag of images) {
+      const src = tag.match(/src="([^"]+)"/)?.[1]!;
+      const isMoreWork = tag.includes(`sizes="${moreSizes}"`);
+      const sizes = tag.match(/sizes="([^"]*)"/)?.[1];
+      const srcset = tag.match(/srcset="([^"]*)"/)?.[1];
+
+      if (animatedFigures.includes(src)) {
+        // A resized copy would freeze the 160-frame plot, so the band loads the
+        // animated original and declares no candidate list at all.
+        expect(srcset, `${slug} ${src} keeps its animation`).toBeUndefined();
+        expect(sizes, `${slug} ${src} has no sizes without srcset`).toBeUndefined();
+        continue;
+      }
+
+      expect(sizes, `${slug} every image declares sizes`).toBeDefined();
+      if (isMoreWork) {
+        expect(sizes, `${slug} More Works`).toBe(moreSizes);
+      } else {
+        expect(gallerySizes, `${slug} gallery band`).toContain(sizes);
+      }
+
+      expect(srcset, `${slug} ${tag}`).toBeDefined();
+      for (const entry of srcset!.split(', ')) {
+        const [url, descriptor] = entry.split(' ');
+        expect(webpSize(url!).width, `${slug} ${url}`).toBe(Number(descriptor!.replace('w', '')));
+      }
+    }
+
+    // The first band loads eagerly at high priority; later bands stay lazy.
+    const gallery = images.filter((tag) => !tag.includes(`sizes="${moreSizes}"`));
+    expect(gallery[0], slug).toContain('loading="eager"');
+    expect(gallery[0], slug).toContain('fetchpriority="high"');
+    for (const tag of gallery.slice(1)) expect(tag, slug).toContain('loading="lazy"');
+
+    // Each band still opens its full-size original, which is also the file `src`
+    // falls back to when srcset is unsupported.
+    const openers = [...html.matchAll(/<a class="project-visual-image[^"]*" href="([^"]+)"[^>]*>\s*<img src="([^"]+)"/g)];
+    expect(openers.length, slug).toBe(gallery.length);
+    for (const [, href, imgSrc] of openers) {
+      expect(imgSrc, slug).toBe(href);
+      expect(webpSize(href!).width, href).toBeGreaterThanOrEqual(800);
+    }
+
+    // More Works pairs every candidate with its hover ghost.
+    const moreWork = images.filter((tag) => tag.includes(`sizes="${moreSizes}"`));
+    expect(moreWork.length, slug).toBe(4);
+
+    // Planned entries never appear here, and the skip for JUKdata's strip holds.
+    expect(html, slug).not.toMatch(/diucon|horseflight|jukdata-2/);
+  }
+});
+
+test('mobile detail pages request an 800px candidate while originals stay linked', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const firstVisuals: Record<string, string> = {
+    'todays-brief': '/images/projects/todays-brief-card.webp',
+    'this-site': '/screenshots/this-site-card.webp',
+    chap: '/chap-card-full.webp',
+    jukdata: '/jukdata-card.webp',
+    'surface-runoff': '/images/projects/surface-runoff-rain-storm.webp',
+  };
+
+  for (const [slug, original] of Object.entries(firstVisuals)) {
+    await page.goto(`/projects/${slug}/`);
+    const image = page.locator('.project-visual-image img').first();
+    await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(0);
+
+    // 390 CSS px of a full-bleed band needs the 800px file, not the 3840-6688px
+    // one. The animated Surface Runoff figures have no static sibling, so they
+    // intentionally stay on their original.
+    const expected = animatedFigures.includes(original) ? original : original.replace(/\.webp$/, '-800.webp');
+    expect(await image.evaluate((element: HTMLImageElement) => new URL(element.currentSrc).pathname), slug)
+      .toBe(expected);
+
+    // The untouched original is still the open-original target at its native size.
+    await expect(page.locator('.project-visual-image').first(), slug).toHaveAttribute('href', original);
+    expect(webpSize(original).width, original).toBe(imageFor(original)?.width);
+
+    // More Works thumbnails draw from the same variants instead of the full file.
+    // A lazy image reports an empty `currentSrc` until the browser has picked a
+    // candidate, so that transient state polls instead of throwing.
+    for (const thumbnail of await page.locator('.project-more__img-main').all()) {
+      await thumbnail.scrollIntoViewIfNeeded();
+      await expect.poll(() => thumbnail.evaluate((element: HTMLImageElement) => (
+        element.currentSrc ? new URL(element.currentSrc).pathname : ''
+      ))).toMatch(/-800\.webp$/);
+    }
+  }
+});
+
+// The three Surface Runoff figures are 160-frame animated WebPs, so their
+// responsive story is the opposite of the static assets': a resized copy would
+// drop 159 frames and freeze the plot, and an animated re-encode at the same
+// quality is larger than the original (measured: 679/1141/463 KB at 1200px for
+// originals of 465/769/353 KB). They therefore keep their original file at every
+// viewport, which this test both documents and protects.
+test('animated Surface Runoff figures keep their original file at every density', async ({ browser }) => {
+  for (const src of animatedFigures) {
+    // The table records the asset's real size but no resized variants.
+    expect(imageFor(src)?.variants, src).toEqual([]);
+    // 160 frames of the simulation, not a still.
+    expect(webpFrameCount(src), src).toBe(160);
+  }
+
+  // The built page offers the originals and no static sibling of any width.
+  const html = readDist('/projects/surface-runoff/index.html');
+  for (const src of animatedFigures) {
+    const base = src.replace(/\.webp$/, '');
+    expect(html, src).toContain(`src="${src}"`);
+    expect(html, `${src} has no -800 sibling in the markup`).not.toContain(`${base}-800.webp`);
+    expect(html, `${src} has no -1200 sibling in the markup`).not.toContain(`${base}-1200.webp`);
+  }
+
+  // A high-density phone asks for the animated original, receives all of it, and
+  // still opens the same file from the image link.
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3 });
+  const page = await context.newPage();
+  await page.route('**/_vercel/**', route => route.fulfill({ status: 204 }));
+
+  const transferred = new Map<string, number>();
+  page.on('response', async (response) => {
+    if (response.request().resourceType() !== 'image') return;
+    try {
+      transferred.set(new URL(response.url()).pathname, (await response.body()).length);
+    } catch {
+      // A response without a body (redirect, 204) carries no image bytes.
+    }
+  });
+
+  await page.goto('/projects/surface-runoff/');
+  const visuals = page.locator('.project-visual-image');
+  await expect(visuals).toHaveCount(animatedFigures.length);
+
+  for (const [index, src] of animatedFigures.entries()) {
+    const visual = visuals.nth(index);
+    await visual.scrollIntoViewIfNeeded();
+    await expect.poll(() => visual.locator('img').evaluate((image: HTMLImageElement) => new URL(image.currentSrc).pathname), src)
+      .toBe(src);
+    await expect(visual, src).toHaveAttribute('href', src);
+    await expect.poll(() => transferred.has(src), src).toBe(true);
+    expect(transferred.get(src), src).toBe(statSync(new URL(`../dist${src}`, import.meta.url)).size);
+  }
+
+  await context.close();
+});
+
+// Every other shipped source is a still image, so a resize reproduces exactly
+// what the original shows and the responsive candidates are safe to offer.
+test('every non-animated responsive source is a still image with real variants', () => {
+  for (const [src, image] of Object.entries(responsiveImages)) {
+    if (animatedFigures.includes(src)) continue;
+    expect(webpFrameCount(src), src).toBe(1);
+    expect(image.variants.length, src).toBeGreaterThan(0);
+  }
+});
+
+test('desktop galleries still reach a high-density candidate', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  for (const [slug, expected] of [
+    // A 1440px band asks for 1600px, so the mid variant is chosen, not the 2880/6688px original.
+    ['this-site', '/screenshots/this-site-overview-1600.webp'],
+    ['chap', '/images/projects/chap-2-1600.webp'],
+    // The 1400px figure has no larger sibling: the original is the honest choice.
+    ['surface-runoff', '/images/projects/surface-runoff-water-depth.webp'],
+  ] as const) {
+    await page.goto(`/projects/${slug}/`);
+    const image = page.locator('.project-visual-image img').nth(1);
+    await image.scrollIntoViewIfNeeded();
+    await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.currentSrc))
+      .toContain(expected);
+  }
+});
+
+// ── Document structure and landmarks ────────────────────────────────────────
+
+test('the homepage script ships inside the document, so the CSP stays self-only', () => {
+  const policy = (JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8')) as {
+    headers: { headers: { key: string; value: string }[] }[];
+  }).headers[0]!.headers.find((header) => header.key === 'Content-Security-Policy')!.value;
+  expect(policy).toContain("script-src 'self'");
+  expect(policy).not.toContain('unsafe-inline');
+
+  for (const file of ['/index.html', '/404.html', '/projects/chap/index.html']) {
+    const html = readDist(file);
+    // Nothing is emitted after the closing element any more.
+    expect(html.trimEnd().endsWith('</html>'), file).toBe(true);
+    expect(html.slice(html.lastIndexOf('</html>')), file).not.toContain('<script');
+
+    // Every executable script is an external module the policy allows.
+    const inline = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>/g)]
+      .map((match) => match[0])
+      .filter((tag) => !tag.includes('application/ld+json'));
+    expect(inline, file).toEqual([]);
+  }
+
+  const home = readDist('/index.html');
+  const fallback = home.indexOf('/_astro/index.astro_astro_type_script_index_0_lang');
+  expect(fallback).toBeGreaterThan(home.indexOf('</footer>'));
+  expect(fallback).toBeLessThan(home.indexOf('</body>'));
+});
+
+test('the site footer is one page-level contentinfo landmark', async ({ page }) => {
+  for (const path of ['/', '/projects/todays-brief/', '/projects/this-site/', '/projects/chap/', '/projects/jukdata/', '/projects/surface-runoff/']) {
+    await page.goto(path);
+    const footer = page.getByRole('contentinfo');
+    await expect(footer, path).toHaveCount(1);
+    await expect(footer, path).toHaveAttribute('aria-label', 'Site footer');
+    await expect(footer.getByRole('link', { name: 'GitHub', exact: true }), path).toHaveCount(1);
+  }
+});
+
+// ── Fresh production preview ────────────────────────────────────────────────
+//
+// The suite builds and serves its own output on a dedicated port. Reusing a
+// running server used to let these tests inspect an Astro dev server (or an
+// older preview) while reading a stale `dist/`.
+
+test('the suite is served by its own fresh production build', async ({ page, baseURL }) => {
+  expect(baseURL, 'the dev server port stays free').not.toContain(':4322');
+
+  const response = await page.request.get('/');
+  expect(response.status()).toBe(200);
+  // The served document is the build on disk: a dev server injects its own
+  // client and the Astro toolbar, and a stale preview serves older markup.
+  expect(await response.text()).toBe(readDist('/index.html'));
+});
+
+// ── Exit-animation fallback ─────────────────────────────────────────────────
+//
+// The fallback only runs where the View Transitions API is missing (older
+// Firefox), so these tests remove the API before the page's module script runs
+// and exercise the real branch instead of a rewritten copy of it.
+
+const withoutViewTransitions = (page: Page) =>
+  page.addInitScript(() => {
+    Object.defineProperty(document, 'startViewTransition', { configurable: true, value: undefined });
+  });
+
+const firstProjectCard = (page: Page) => page.locator('a.selected-work__link').first();
+
+test.describe('exit-animation fallback without View Transitions', () => {
+  test.use({ reducedMotion: 'no-preference' });
+
+  test('modified clicks keep their native new-tab behaviour', async ({ page, context }) => {
+    await withoutViewTransitions(page);
+
+    for (const modifier of ['Control', 'Shift'] as const) {
+      await page.goto('/');
+      await expect(firstProjectCard(page)).toHaveAttribute('href', '/projects/todays-brief/');
+
+      // Chromium opens the project in another tab and leaves this one in place.
+      const opened = context.waitForEvent('page');
+      await firstProjectCard(page).click({ modifiers: [modifier] });
+      const tab = await opened;
+      expect(context.pages().length, `${modifier} opens a second tab`).toBe(2);
+
+      // The popup document's own location is the fact under test. `tab.url()`
+      // is Playwright's bookkeeping copy of it, and that copy can stay at
+      // `about:blank` for the whole run when the new tab commits its navigation
+      // before Playwright adopts it (measured on roughly half of concurrent
+      // runs while the document itself was already on the project page).
+      await tab.waitForFunction(() => location.pathname === '/projects/todays-brief/');
+      expect(await tab.evaluate(() => location.pathname), modifier).toBe('/projects/todays-brief/');
+      await expect(page, modifier).toHaveURL(/\/$/);
+
+      // No exit animation was started on the page behind it.
+      const body = await page.evaluate(() => ({
+        position: document.body.style.position,
+        transform: document.body.style.transform,
+      }));
+      expect(body, modifier).toEqual({ position: '', transform: '' });
+      await tab.close();
+    }
+  });
+
+  test('non-primary and modifier-only clicks are not swallowed', async ({ page }) => {
+    await withoutViewTransitions(page);
+    await page.goto('/');
+
+    const outcomes = await page.evaluate(() => {
+      const link = document.querySelector<HTMLAnchorElement>('a.selected-work__link')!;
+      // Keep the page alive so the default action cannot navigate away.
+      link.href = '#work';
+      const click = (init: MouseEventInit) => {
+        const event = new MouseEvent('click', { bubbles: true, cancelable: true, ...init });
+        link.dispatchEvent(event);
+        return {
+          prevented: event.defaultPrevented,
+          position: document.body.style.position,
+          transform: document.body.style.transform,
+        };
+      };
+      return {
+        ctrl: click({ ctrlKey: true }),
+        meta: click({ metaKey: true }),
+        shift: click({ shiftKey: true }),
+        alt: click({ altKey: true }),
+        middle: click({ button: 1 }),
+      };
+    });
+
+    for (const [kind, outcome] of Object.entries(outcomes)) {
+      // Left to the browser: not prevented, and no exit move applied.
+      expect(outcome, kind).toEqual({ prevented: false, position: '', transform: '' });
+    }
+  });
+
+  test('a click another handler cancels is not animated', async ({ page }) => {
+    await withoutViewTransitions(page);
+    await page.goto('/');
+
+    const outcome = await page.evaluate(() => {
+      const link = document.querySelector<HTMLAnchorElement>('a.selected-work__link')!;
+      link.href = '#work';
+      // A capture listener runs before the page's own handler.
+      const cancel = (event: Event) => event.preventDefault();
+      document.addEventListener('click', cancel, { capture: true, once: true });
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+      link.dispatchEvent(event);
+      document.removeEventListener('click', cancel, { capture: true });
+      return { prevented: event.defaultPrevented, position: document.body.style.position };
+    });
+
+    expect(outcome).toEqual({ prevented: true, position: '' });
+  });
+
+  test('a primary click still plays the exit animation before navigating', async ({ page }) => {
+    await withoutViewTransitions(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    await expect(firstProjectCard(page)).toBeVisible();
+
+    // `click()` inside the page runs the handler synchronously, so the state is
+    // read before the 450ms navigation delay elapses.
+    await page.evaluate(() => document.querySelector<HTMLAnchorElement>('a.selected-work__link')!.click());
+    const state = await page.evaluate(() => document.body.style.position);
+    expect(state).toBe('fixed');
+
+    const moved = await page.evaluate(() => new Promise<boolean>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve(document.body.style.transform !== '')));
+    }));
+    expect(moved).toBe(true);
+
+    await page.waitForURL('**/projects/todays-brief/');
+  });
+});
+
+test.describe('exit-animation fallback with reduced motion', () => {
+  test('a card click navigates without the exit animation', async ({ page }) => {
+    await withoutViewTransitions(page);
+    await page.goto('/');
+
+    const outcome = await page.evaluate(() => {
+      const link = document.querySelector<HTMLAnchorElement>('a.selected-work__link')!;
+      link.href = '#work';
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+      link.dispatchEvent(event);
+      return { prevented: event.defaultPrevented, position: document.body.style.position };
+    });
+
+    // Reduced motion keeps the plain navigation: the handler never takes over.
+    expect(outcome).toEqual({ prevented: false, position: '' });
+  });
+
+  test('a real click still reaches the project', async ({ page }) => {
+    await withoutViewTransitions(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    await firstProjectCard(page).click();
+    await page.waitForURL('**/projects/todays-brief/');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText("Today's Brief");
+  });
+});
+
+test('the native view-transition path is left alone', async ({ page }) => {
+  await page.goto('/');
+  expect(await page.evaluate(() => typeof document.startViewTransition)).toBe('function');
+
+  const outcome = await page.evaluate(() => {
+    const link = document.querySelector<HTMLAnchorElement>('a.selected-work__link')!;
+    link.href = '#work';
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    link.dispatchEvent(event);
+    return { prevented: event.defaultPrevented, position: document.body.style.position };
+  });
+
+  expect(outcome).toEqual({ prevented: false, position: '' });
 });

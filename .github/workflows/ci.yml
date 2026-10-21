@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# The job only checks the source: no deploy, no publish, no repository settings.
+permissions:
+  contents: read
+
+jobs:
+  check-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Node 22 LTS, the line package.json's engines field (>=22.12.0) targets.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run check
+
+      - run: npx playwright install --with-deps chromium
+
+      # The test command builds the site and serves a fresh production preview on
+      # its own port (playwright.config.ts), so there is no separate build step.
+      - run: npm run test:mobile

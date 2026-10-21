@@ -20,38 +20,50 @@ import { site } from '../data/site';
       <SiteFooter name={site.name} socials={site.socials} />
     </div>
   </main>
-</BaseLayout>
 
-<script>
-  // Only use JS exit animation in browsers without native view transitions (Firefox)
-  if (!document.startViewTransition) {
-    document.querySelectorAll('a.selected-work__link').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const url = link.getAttribute('href');
-        if (!url) return;
+  <script>
+    // Only use the JS exit animation in browsers without native view transitions
+    // (Firefox); everywhere else the stylesheet's `@view-transition` rule plays
+    // the same move natively.
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-        const lenis = window.siteMotion?.lenis;
-        const scrollY = lenis ? lenis.scroll : window.scrollY;
-        if (lenis) lenis.stop();
+    if (!document.startViewTransition) {
+      document.querySelectorAll<HTMLAnchorElement>('a.selected-work__link').forEach((link) => {
+        link.addEventListener('click', (event) => {
+          // Everything the browser already owns stays native: modified and
+          // non-primary clicks open a new tab or window, and a click another
+          // handler has cancelled is not ours to animate.
+          if (event.defaultPrevented || event.button !== 0) return;
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          // Reduced motion keeps the plain navigation, without the exit move.
+          if (reducedMotion.matches) return;
 
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollY}px`;
-        document.body.style.left = '0';
-        document.body.style.right = '0';
+          const url = link.getAttribute('href');
+          if (!url) return;
+          event.preventDefault();
 
-        requestAnimationFrame(() => {
+          const lenis = window.siteMotion?.lenis;
+          const scrollY = lenis ? lenis.scroll : window.scrollY;
+          if (lenis) lenis.stop();
+
+          document.body.style.position = 'fixed';
+          document.body.style.top = `-${scrollY}px`;
+          document.body.style.left = '0';
+          document.body.style.right = '0';
+
           requestAnimationFrame(() => {
-            document.body.style.transition = 'transform 450ms cubic-bezier(0.55, 0, 0.85, 0.25), opacity 450ms ease-in';
-            document.body.style.transform = 'translateY(-105vh)';
-            document.body.style.opacity = '0.4';
-            setTimeout(() => { window.location.href = url; }, 450);
+            requestAnimationFrame(() => {
+              document.body.style.transition = 'transform 450ms cubic-bezier(0.55, 0, 0.85, 0.25), opacity 450ms ease-in';
+              document.body.style.transform = 'translateY(-105vh)';
+              document.body.style.opacity = '0.4';
+              setTimeout(() => { window.location.href = url; }, 450);
+            });
           });
         });
       });
-    });
-  }
-</script>
+    }
+  </script>
+</BaseLayout>
 
 <style>
   .scroll-wrapper {

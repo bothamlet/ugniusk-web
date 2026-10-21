@@ -1,0 +1,19 @@
+{
+	"/chap-card-full.webp": { "width": 3840, "height": 1920, "variants": [800, 1600] },
+	"/chap-card.webp": { "width": 1672, "height": 941, "variants": [800, 1600] },
+	"/images/projects/chap-2.webp": { "width": 6688, "height": 3764, "variants": [800, 1600] },
+	"/images/projects/chap-3.webp": { "width": 6688, "height": 3764, "variants": [800, 1600] },
+	"/images/projects/diucon-card.webp": { "width": 1920, "height": 1080, "variants": [800, 1600] },
+	"/images/projects/horseflight-card.webp": { "width": 1920, "height": 1080, "variants": [800, 1600] },
+	"/images/projects/jukdata-3.webp": { "width": 2560, "height": 1344, "variants": [800, 1600] },
+	"/images/projects/surface-runoff-card.webp": { "width": 894, "height": 503, "variants": [800] },
+	"/images/projects/surface-runoff-rain-storm.webp": { "width": 1400, "height": 770, "variants": [] },
+	"/images/projects/surface-runoff-soil-saturation.webp": { "width": 1400, "height": 770, "variants": [] },
+	"/images/projects/surface-runoff-water-depth.webp": { "width": 1400, "height": 783, "variants": [] },
+	"/images/projects/todays-brief-card.webp": { "width": 3840, "height": 2160, "variants": [800, 1600] },
+	"/images/projects/todays-brief-world.webp": { "width": 5120, "height": 3840, "variants": [800, 1600] },
+	"/jukdata-card.webp": { "width": 2560, "height": 1440, "variants": [800, 1600] },
+	"/screenshots/this-site-card.webp": { "width": 2880, "height": 1620, "variants": [800, 1600] },
+	"/screenshots/this-site-detail.webp": { "width": 2560, "height": 1291, "variants": [800, 1600] },
+	"/screenshots/this-site-overview.webp": { "width": 2560, "height": 1288, "variants": [800, 1600] }
+}
