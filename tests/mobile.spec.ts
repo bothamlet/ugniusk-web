@@ -292,3 +292,219 @@ test('project pages carry the corrected factual claims', async ({ page }) => {
   await expect(jukdata).not.toContainText('Google Tag Manager');
   await expect(jukdata).not.toContainText('Scroll reveals run on Motion.');
 });
+
+interface ProjectMeta {
+  title: string;
+  type: string;
+  year: string;
+  stack: string;
+  status: string;
+  url: string;
+}
+
+const repositories: Record<string, ProjectMeta> = {
+  'todays-brief': {
+    title: "Today's Brief",
+    type: 'Information Systems & Automation',
+    year: '2026',
+    stack: 'Python · SQLite · Telegram Bot API',
+    status: 'Finished',
+    url: 'https://github.com/bothamlet/todays-brief',
+  },
+  'this-site': {
+    title: 'This Site',
+    type: 'Web Design & Engineering',
+    year: '2026',
+    stack: 'Astro · Anime.js · Lenis',
+    status: 'Active',
+    url: 'https://github.com/bothamlet/ugniusk-web',
+  },
+  chap: {
+    title: 'Chap',
+    type: 'Mobile Development',
+    year: '2026',
+    stack: 'Kotlin · Jetpack Compose · Room · SQLCipher',
+    status: 'Paused',
+    url: 'https://github.com/bothamlet/chap-android',
+  },
+  jukdata: {
+    title: 'JUKdata',
+    type: 'Web Design & Engineering',
+    year: '2026',
+    stack: 'Next.js · React · TypeScript · Tailwind CSS',
+    status: 'Completed',
+    url: 'https://github.com/bothamlet/jukdata-site',
+  },
+};
+
+const repoLinkName = (title: string) => `View ${title} repository on GitHub`;
+
+interface Box { x: number; y: number; width: number; height: number }
+
+const overlaps = (a: Box, b: Box) =>
+  a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+
+for (const [slug, project] of Object.entries(repositories)) {
+  test(`${slug}: the Status cell carries the repository link`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`/projects/${slug}/`);
+
+    // The fourth field is still Status: four meta items, same value, one link.
+    await expect(page.locator('.project-meta-item')).toHaveCount(4);
+    const status = page.locator('.project-meta-item').nth(3);
+    await expect(status.locator('.project-meta-item__label')).toHaveText('Status');
+    await expect(status.locator('.project-meta-item__value')).toHaveText(project.status);
+
+    const link = status.getByRole('link', { name: repoLinkName(project.title) });
+    await expect(link).toHaveCount(1);
+    await expect(link).toHaveAttribute('href', project.url);
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    await expect(link).toHaveAttribute('title', repoLinkName(project.title));
+
+    const icon = await link.locator('svg').boundingBox();
+    expect(icon!.width).toBeGreaterThanOrEqual(18);
+    expect(icon!.width).toBeLessThanOrEqual(19);
+    expect(icon!.height).toBeGreaterThanOrEqual(18);
+    expect(icon!.height).toBeLessThanOrEqual(19);
+
+    const [statusBox, linkBox] = [await status.boundingBox(), await link.boundingBox()];
+    expect(linkBox!.width).toBeGreaterThanOrEqual(44);
+    expect(linkBox!.height).toBeGreaterThanOrEqual(44);
+    expect(linkBox!.x).toBeGreaterThanOrEqual(statusBox!.x);
+    expect(linkBox!.x + linkBox!.width).toBeLessThanOrEqual(statusBox!.x + statusBox!.width + 1);
+
+    // The server-rendered HTML carries the same link.
+    const html = await (await page.request.get(`/projects/${slug}/`)).text();
+    expect(html).toContain(`href="${project.url}"`);
+  });
+}
+
+test('Status repository link is keyboard reachable with a visible focus ring', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/projects/jukdata/');
+  // The back link is the last tab stop before the meta row, so one Tab lands on
+  // the repository link.
+  await page.locator('.project-back').focus();
+  await page.keyboard.press('Tab');
+  const link = page.locator('.project-repo');
+  await expect(link).toBeFocused();
+  expect(await link.evaluate((element) => element.matches(':focus-visible'))).toBe(true);
+  expect(await link.evaluate((element) => getComputedStyle(element).outlineWidth)).toBe('2px');
+  expect(await link.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe('solid');
+});
+
+for (const width of [320, 390, 430, 900, 901, 1000, 1440]) {
+  test(`Status repository link keeps the meta card intact at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    for (const [slug, project] of Object.entries(repositories)) {
+      await page.goto(`/projects/${slug}/`);
+      await page.evaluate(() => document.fonts.ready);
+      const status = page.locator('.project-meta-item').nth(3);
+      const link = status.getByRole('link', { name: repoLinkName(project.title) });
+      const [cardBox, rowBox, statusBox, labelBox, valueBox, linkBox, iconBox] = [
+        (await page.locator('.project-detail').boundingBox())!,
+        (await page.locator('.project-meta-row').boundingBox())!,
+        (await status.boundingBox())!,
+        (await status.locator('.project-meta-item__label').boundingBox())!,
+        (await status.locator('.project-meta-item__value').boundingBox())!,
+        (await link.boundingBox())!,
+        (await link.locator('svg').boundingBox())!,
+      ];
+      const where = `${slug} at ${width}px`;
+
+      // 44px touch target around an 18px mark.
+      expect(linkBox.width, where).toBeGreaterThanOrEqual(44);
+      expect(linkBox.height, where).toBeGreaterThanOrEqual(44);
+      expect(iconBox.width, where).toBeGreaterThanOrEqual(18);
+      expect(iconBox.width, where).toBeLessThanOrEqual(19);
+      expect(iconBox.height, where).toBeGreaterThanOrEqual(18);
+      expect(iconBox.height, where).toBeLessThanOrEqual(19);
+
+      // Inside the viewport, the meta card and the meta row. `.project-page`
+      // clips overflow-x, so document.scrollWidth stays pinned to the viewport
+      // even when the mark hangs off the edge; only the boxes show that.
+      expect(linkBox.x, where).toBeGreaterThanOrEqual(0);
+      expect(linkBox.x + linkBox.width, where).toBeLessThanOrEqual(width);
+      expect(rowBox.x, where).toBeGreaterThanOrEqual(cardBox.x);
+      expect(rowBox.x + rowBox.width, where).toBeLessThanOrEqual(cardBox.x + cardBox.width + 1);
+      expect(linkBox.x, where).toBeGreaterThanOrEqual(rowBox.x);
+      expect(linkBox.x + linkBox.width, where).toBeLessThanOrEqual(rowBox.x + rowBox.width + 1);
+      expect(linkBox.y, where).toBeGreaterThanOrEqual(rowBox.y);
+      expect(linkBox.y + linkBox.height, where).toBeLessThanOrEqual(rowBox.y + rowBox.height + 1);
+
+      // Still in the Status cell, clear of its label and value.
+      expect(linkBox.x, where).toBeGreaterThanOrEqual(statusBox.x);
+      expect(linkBox.x + linkBox.width, where).toBeLessThanOrEqual(statusBox.x + statusBox.width + 1);
+      expect(linkBox.y, where).toBeGreaterThanOrEqual(statusBox.y);
+      expect(linkBox.y + linkBox.height, where).toBeLessThanOrEqual(statusBox.y + statusBox.height + 1);
+      expect(overlaps(linkBox, labelBox), where).toBe(false);
+      expect(overlaps(linkBox, valueBox), where).toBe(false);
+      // A wrapped Type or Stack value makes the row taller than the Status
+      // cell; the mark must stay beside the Status text, not sink to the
+      // middle of the row.
+      expect(linkBox.y - statusBox.y, where).toBeLessThanOrEqual(10);
+    }
+  });
+}
+
+// Type and Stack are the widest fields, and the desktop row gives each of the
+// four fields a quarter of the card. The values wrap instead of truncating, so
+// the whole stack list stays readable at every desktop width.
+for (const width of [901, 1000, 1440]) {
+  test(`Type and Stack metadata is readable, not clipped, at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    for (const [slug, project] of Object.entries(repositories)) {
+      await page.goto(`/projects/${slug}/`);
+      await page.evaluate(() => document.fonts.ready);
+      const where = `${slug} at ${width}px`;
+      const values = page.locator('.project-meta-item__value');
+      const expected = [project.type, project.year, project.stack, project.status];
+
+      await expect(values).toHaveCount(4);
+      for (const [index, text] of expected.entries()) {
+        await expect(values.nth(index), `value ${index} ${where}`).toHaveText(text);
+      }
+
+      const boxes = await values.evaluateAll((elements) =>
+        elements.map((element) => {
+          const css = getComputedStyle(element);
+          return {
+            scrollWidth: element.scrollWidth,
+            clientWidth: element.clientWidth,
+            scrollHeight: element.scrollHeight,
+            clientHeight: element.clientHeight,
+            whiteSpace: css.whiteSpace,
+            textOverflow: css.textOverflow,
+          };
+        }),
+      );
+
+      for (const [index, box] of boxes.entries()) {
+        const field = `"${expected[index]}" ${where}`;
+        expect(box.whiteSpace, field).toBe('normal');
+        expect(box.textOverflow, field).not.toBe('ellipsis');
+        expect(box.scrollWidth, field).toBeLessThanOrEqual(box.clientWidth + 1);
+        expect(box.scrollHeight, field).toBeLessThanOrEqual(box.clientHeight + 1);
+      }
+    }
+  });
+}
+
+test('Surface Runoff leaves the Status cell without a repository link', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/projects/surface-runoff/');
+  const status = page.locator('.project-meta-item').nth(3);
+  await expect(page.locator('.project-meta-item')).toHaveCount(4);
+  await expect(status.getByRole('link')).toHaveCount(0);
+  await expect(page.locator('.project-repo')).toHaveCount(0);
+  await expect(status.locator('.project-meta-item__value')).toHaveText('Completed');
+  // Without a URL the cell keeps its original box: no reserved gutter.
+  const style = await status.evaluate((element) => {
+    const css = getComputedStyle(element);
+    return { position: css.position, paddingRight: css.paddingRight };
+  });
+  expect(style).toEqual({ position: 'static', paddingRight: '0px' });
+  const html = await (await page.request.get('/projects/surface-runoff/')).text();
+  expect(html).not.toContain('class="project-repo');
+});

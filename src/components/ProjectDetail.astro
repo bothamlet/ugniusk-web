@@ -4,6 +4,7 @@ import { projects } from '../data/projects';
 import { site } from '../data/site';
 import SiteFooter from './SiteFooter.astro';
 import ProjectVisual from './ProjectVisual.astro';
+import SocialIcon from './SocialIcon.astro';
 
 interface Props {
   project: Project;
@@ -62,9 +63,21 @@ const technicalHeading = sectionByLabel('Technical')?.body;
         <span class="project-meta-item__label">Stack</span>
         <span class="project-meta-item__value" data-scramble="scroll">{project.stack.join(' · ')}</span>
       </div>
-      <div class="project-meta-item">
+      <div class:list={["project-meta-item", project.repositoryUrl && "project-meta-item--repo"]}>
         <span class="project-meta-item__label">Status</span>
         <span class="project-meta-item__value" data-scramble="scroll">{project.status}</span>
+        {project.repositoryUrl && (
+          <a
+            class="project-repo cursor-hover"
+            href={project.repositoryUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`View ${project.title} repository on GitHub`}
+            aria-label={`View ${project.title} repository on GitHub`}
+          >
+            <SocialIcon label="GitHub" size={18} />
+          </a>
+        )}
       </div>
     </div>
 
@@ -309,7 +322,10 @@ const technicalHeading = sectionByLabel('Technical')?.body;
      ════════════════════════════════ */
   .project-meta-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    /* Zero-minimum tracks: a plain `1fr` floors at the longest value's
+       max-content width, which pushed the fourth cell (and the repository mark
+       in its gutter) past the row on 901-1000px viewports. */
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 3rem;
     padding: clamp(2.5rem, 4vw, 3.5rem) 0;
     margin-top: clamp(1.5rem, 3vw, 2.5rem);
@@ -319,6 +335,9 @@ const technicalHeading = sectionByLabel('Technical')?.body;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    /* Grid items default to min-width:auto, which would put back the
+       max-content floor the zero-minimum tracks above just removed. */
+    min-width: 0;
   }
 
   .project-meta-item:last-child {
@@ -339,11 +358,50 @@ const technicalHeading = sectionByLabel('Technical')?.body;
     font-size: clamp(0.9rem, 1.3vw, 1.15rem);
     font-weight: 900;
     letter-spacing: -0.01em;
+    line-height: 1.4;
     text-transform: uppercase;
     color: #070707;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* Wrap, never ellipsize: the quarter-width tracks are narrower than Type
+       and Stack, so truncation hid real metadata. Break mid-token only when a
+       single word cannot fit. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* The repository mark sits in the Status cell's reserved right gutter, so the
+     fourth field keeps its size and the mark adds no height. Only the cells that
+     have a repository reserve the 44px touch target. */
+  .project-meta-item--repo {
+    position: relative;
+    /* Start-aligned so the mark stays beside the Status text when a wrapped
+       Type/Stack value makes the row taller than this cell. */
+    align-self: start;
+    min-height: 2.75rem;
+    padding-right: 2.75rem;
+  }
+
+  .project-repo {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    color: #070707;
+    transform: translateY(-50%);
+    transition: color 200ms ease-out;
+  }
+
+  .project-repo:hover,
+  .project-repo:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .project-repo:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   /* ════════════════════════════════
@@ -526,18 +584,8 @@ const technicalHeading = sectionByLabel('Technical')?.body;
       padding: 1.75rem 0 2.5rem;
     }
 
-    .project-meta-item {
-      min-width: 0;
-    }
-
     .project-meta-item:last-child {
       padding-left: 0;
-    }
-
-    .project-meta-item__value {
-      white-space: normal;
-      overflow-wrap: anywhere;
-      line-height: 1.4;
     }
 
     .project-editorial {

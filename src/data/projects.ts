@@ -16,6 +16,8 @@ export interface Project {
 	type: string;
 	stack: string[];
 	status: string;
+	/** Repository URL, when known. Omitted where there is none. */
+	repositoryUrl?: string;
 	image?: string;
 	/** Card-only visual, when the card should not reuse the project photo. */
 	cardImage?: string;
@@ -47,6 +49,7 @@ const allProjects: Project[] = [
 		type: "Information Systems & Automation",
 		stack: ["Python", "SQLite", "Telegram Bot API"],
 		status: "Finished",
+		repositoryUrl: "https://github.com/bothamlet/todays-brief",
 		image: "/images/projects/todays-brief-card.webp",
 		imageAlt:
 			"Today's Brief - the editorial wordmark above the six section markers, one filled",
@@ -94,6 +97,7 @@ const allProjects: Project[] = [
 		type: "Web Design & Engineering",
 		stack: ["Astro", "Anime.js", "Lenis"],
 		status: "Active",
+		repositoryUrl: "https://github.com/bothamlet/ugniusk-web",
 		image: "/screenshots/this-site-card.webp",
 		ogImage: "/og/this-site-card.png",
 		imageAlt: "This Site homepage - the selected work carousel and editorial intro",
@@ -138,6 +142,7 @@ const allProjects: Project[] = [
 		type: "Mobile Development",
 		stack: ["Kotlin", "Jetpack Compose", "Room", "SQLCipher"],
 		status: "Paused",
+		repositoryUrl: "https://github.com/bothamlet/chap-android",
 		image: "/chap-card-full.webp",
 		cardImage: "/chap-card.webp",
 		ogImage: "/og/chap-card-full.png",
@@ -183,6 +188,7 @@ const allProjects: Project[] = [
 		type: "Web Design & Engineering",
 		stack: ["Next.js", "React", "TypeScript", "Tailwind CSS"],
 		status: "Completed",
+		repositoryUrl: "https://github.com/bothamlet/jukdata-site",
 		image: "/jukdata-card.webp",
 		ogImage: "/og/jukdata-card.png",
 		imageAlt: "JUKdata - corporate website homepage with a warm orange hero",
