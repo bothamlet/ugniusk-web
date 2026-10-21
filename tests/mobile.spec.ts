@@ -677,6 +677,8 @@ for (const width of [320, 390, 1440]) {
       (await card.boundingBox())!,
     ];
     expect(plannedBox.x).toBeGreaterThan(nameBox.x + nameBox.width);
+    // It is vertically centred on the name, not dropped onto its baseline.
+    expect(Math.abs(plannedBox.y + plannedBox.height / 2 - (nameBox.y + nameBox.height / 2))).toBeLessThanOrEqual(1);
     expect(plannedBox.y).toBeGreaterThanOrEqual(nameBox.y - 1);
     expect(plannedBox.y + plannedBox.height).toBeLessThanOrEqual(nameBox.y + nameBox.height + 1);
     expect(Math.abs(plannedBox.x + plannedBox.width - (yearBox.x + yearBox.width))).toBeLessThanOrEqual(1);

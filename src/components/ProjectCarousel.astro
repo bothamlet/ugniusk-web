@@ -216,6 +216,9 @@ const { cards } = Astro.props;
   }
 
   .selected-work__planned {
+    /* The row is baseline-aligned for the title; the mono tag would hang below
+       the display-size name, so it centres on the name instead. */
+    align-self: center;
     font-style: italic;
   }
 
