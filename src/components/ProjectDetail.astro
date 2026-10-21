@@ -23,6 +23,10 @@ const sectionByLabel = (label: string) =>
 const overviewBody = sectionByLabel('Overview')?.body;
 const featuresBody = sectionByLabel('Key features')?.body;
 const technicalHeading = sectionByLabel('Technical')?.body;
+// Today's Brief ships two gallery images. Without an authored third image
+// ProjectVisual would draw its full-bleed placeholder band, so the slot is
+// rendered only when the project actually has one.
+const thirdVisual = project.gallery?.[2];
 ---
 
 <main id="main" class="project-page">
@@ -120,7 +124,9 @@ const technicalHeading = sectionByLabel('Technical')?.body;
     </section>
 
     <!-- Third visual -->
-    <ProjectVisual src={project.gallery?.[2]} alt={project.galleryAlt?.[2] ?? `${project.title} - detail`} code={project.code} />
+    {thirdVisual && (
+      <ProjectVisual src={thirdVisual} alt={project.galleryAlt?.[2] ?? `${project.title} - detail`} code={project.code} />
+    )}
 
     <!-- Third editorial - right column -->
     <section class="project-editorial">

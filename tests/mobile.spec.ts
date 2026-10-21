@@ -823,15 +823,88 @@ test("Today's Brief inset visual fills its side gutters with the screenshot's pa
   expect(imageBox.x - bandBox.x).toBeGreaterThan(0);
   expect(bandBox.x + bandBox.width - (imageBox.x + imageBox.width)).toBeGreaterThan(0);
 
-  // The tint is scoped to the inset variant only.
+  // The tint is scoped to the inset variant only. Today's Brief authors two
+  // gallery images, so its one other visual is the cover band.
   const otherVisuals = page.locator('.project-visual-full:not(.project-visual-full--inset)');
-  await expect(otherVisuals).toHaveCount(2);
+  await expect(otherVisuals).toHaveCount(1);
   for (const visual of await otherVisuals.all()) {
     await expect(visual).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   }
   await page.goto('/projects/surface-runoff/');
   await expect(page.locator('.project-visual-full--inset')).toHaveCount(0);
   await expect(page.locator('.project-visual-full').nth(1)).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+});
+
+// Today's Brief authors two gallery images, so the third visual slot is guarded
+// on the image's presence: the Technical column hands over to Reflection with no
+// full-bleed placeholder band in between.
+test("Today's Brief ends its visuals after the second image", async ({ page }) => {
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 1000 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/projects/todays-brief/');
+    await page.evaluate(() => document.fonts.ready);
+    const where = `${viewport.width}px`;
+
+    const visuals = page.locator('.project-visual-full');
+    await expect(visuals, where).toHaveCount(2);
+    await expect(page.locator('.project-visual-placeholder'), where).toHaveCount(0);
+    await expect(page.locator('.project-visual-code'), where).toHaveCount(0);
+
+    const images = visuals.locator('img');
+    await expect(images, where).toHaveCount(2);
+    await expect(images.nth(0), where).toHaveAttribute('src', '/images/projects/todays-brief-card.webp');
+    await expect(images.nth(1), where).toHaveAttribute('src', '/images/projects/todays-brief-world.webp');
+    for (const image of await images.all()) {
+      await image.scrollIntoViewIfNeeded();
+      await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(0);
+    }
+
+    // The World band keeps the inset cream that carries the page into its gutters.
+    const inset = page.locator('.project-visual-full--inset');
+    await expect(inset, where).toHaveCount(1);
+    await expect(inset, where).toHaveCSS('background-color', 'rgb(253, 251, 247)');
+    await expect(inset.locator('img'), where).toHaveAttribute('src', '/images/projects/todays-brief-world.webp');
+
+    // The Technical section's next sibling is the Reflection section itself, so
+    // the two columns meet with no band between them.
+    const technical = page.locator('.project-editorial--left');
+    const reflection = page.locator('.project-editorial').last();
+    await expect(reflection.locator('.project-editorial-label'), where).toHaveText('Reflection');
+    const nextSibling = await technical.evaluate((element) => [...(element.nextElementSibling?.classList ?? [])]);
+    expect(nextSibling, where).toContain('project-editorial');
+    expect(nextSibling, where).not.toContain('project-visual-full');
+    const [technicalBox, reflectionBox] = [(await technical.boundingBox())!, (await reflection.boundingBox())!];
+    expect(reflectionBox.y, `${where} no orphan band`).toBeCloseTo(technicalBox.y + technicalBox.height, 0);
+
+    // Removing the band leaves no horizontal overflow.
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    expect(overflow, where).toBeLessThanOrEqual(0);
+  }
+
+  // The other four project pages still render all three gallery visuals from the
+  // built pages, which is the shipped artefact.
+  const threeVisualPages: Record<string, string[]> = {
+    'this-site': [
+      '/screenshots/this-site-card.webp',
+      '/screenshots/this-site-overview.webp',
+      '/screenshots/this-site-detail.webp',
+    ],
+    chap: ['/chap-card-full.webp', '/images/projects/chap-2.webp', '/images/projects/chap-3.webp'],
+    jukdata: ['/jukdata-card.webp', '/images/projects/jukdata-2.webp', '/images/projects/jukdata-3.webp'],
+    'surface-runoff': [
+      '/images/projects/surface-runoff-rain-storm.webp',
+      '/images/projects/surface-runoff-water-depth.webp',
+      '/images/projects/surface-runoff-soil-saturation.webp',
+    ],
+  };
+  for (const [slug, sources] of Object.entries(threeVisualPages)) {
+    const html = readDist(`/projects/${slug}/index.html`);
+    expect(html.match(/class="project-visual-full/g), slug).toHaveLength(3);
+    for (const source of sources) expect(html, `${slug} ${source}`).toContain(`src="${source}"`);
+  }
+  const today = readDist('/projects/todays-brief/index.html');
+  expect(today.match(/class="project-visual-full/g)).toHaveLength(2);
+  expect(today).not.toContain('project-visual-placeholder');
 });
 
 // Planned cards lead Selected Work: card-only entries with no page, route or
