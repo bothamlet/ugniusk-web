@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { test, expect, type Locator, type Page } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
@@ -430,6 +430,77 @@ test('built project pages carry the Status mark and no title-row remnants', () =
   expect(surface).not.toContain('class="project-repo');
   expect(surface).not.toContain('project-meta-item--repo');
   expect(surface).not.toContain('project-title-row');
+});
+
+// The public domain comes from `site` in astro.config.mjs. The built output is
+// what crawlers and social scrapers receive, so these assertions read it.
+const publicOrigin = 'https://ugniusliberman.me';
+const legacyOrigin = 'https://ugniusk-web-pied.vercel.app';
+
+const readDist = (path: string) => readFileSync(new URL(`../dist${path}`, import.meta.url), 'utf8');
+
+const metaContent = (html: string, key: string) => {
+  const content = html.match(new RegExp(`<meta (?:name|property)="${key}" content="([^"]*)"`))?.[1];
+  expect(content, key).toBeDefined();
+  return content!;
+};
+
+const canonicalHref = (html: string) => {
+  const href = html.match(/<link rel="canonical" href="([^"]*)"/)?.[1];
+  expect(href, 'canonical link').toBeDefined();
+  return href!;
+};
+
+const jsonLdGraph = (html: string) => {
+  const raw = html.match(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/)?.[1];
+  expect(raw, 'JSON-LD block').toBeDefined();
+  return (JSON.parse(raw!) as { '@graph': { '@type': string; url?: string }[] })['@graph'];
+};
+
+test('built pages, robots and sitemaps advertise the public domain', () => {
+  // The six indexable URLs: the home page and the five shipped projects.
+  const pages: Record<string, string> = {
+    '/': '/index.html',
+    '/projects/todays-brief/': '/projects/todays-brief/index.html',
+    '/projects/this-site/': '/projects/this-site/index.html',
+    '/projects/chap/': '/projects/chap/index.html',
+    '/projects/jukdata/': '/projects/jukdata/index.html',
+    '/projects/surface-runoff/': '/projects/surface-runoff/index.html',
+  };
+
+  for (const [path, file] of Object.entries(pages)) {
+    const html = readDist(file);
+    const canonical = canonicalHref(html);
+    expect(canonical, file).toBe(`${publicOrigin}${path}`);
+    expect(metaContent(html, 'og:url'), file).toBe(canonical);
+
+    for (const key of ['og:image', 'twitter:image']) {
+      const image = metaContent(html, key);
+      expect(image.startsWith(`${publicOrigin}/`), `${file} ${key} is absolute on the public domain`).toBe(true);
+      // The shared image is a real file in the built output.
+      expect(existsSync(new URL(`../dist${new URL(image).pathname}`, import.meta.url)), `${file} ${key}`).toBe(true);
+    }
+
+    const graph = jsonLdGraph(html);
+    for (const type of ['WebSite', 'Person']) {
+      expect(graph.find((node) => node['@type'] === type)?.url, `${file} ${type}`).toBe(`${publicOrigin}/`);
+    }
+  }
+
+  const robots = readDist('/robots.txt');
+  expect(robots).toContain(`Sitemap: ${publicOrigin}/sitemap-index.xml`);
+  expect(robots).not.toContain(legacyOrigin);
+
+  const sitemapIndex = readDist('/sitemap-index.xml');
+  expect(sitemapIndex).toContain(`<loc>${publicOrigin}/sitemap-0.xml</loc>`);
+  expect(sitemapIndex).not.toContain(legacyOrigin);
+
+  const sitemap = readDist('/sitemap-0.xml');
+  const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+  expect([...locs].sort()).toEqual(Object.keys(pages).map((path) => `${publicOrigin}${path}`).sort());
+  // Planned and hidden projects have no page and no sitemap entry.
+  expect(sitemap).not.toMatch(/diucon|horseflight|inner-council/i);
+  expect(sitemap).not.toContain(legacyOrigin);
 });
 
 test('repository link is keyboard reachable with a visible focus ring', async ({ page }) => {

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ugniusk-web-pied.vercel.app/sitemap-index.xml
+Sitemap: https://ugniusliberman.me/sitemap-index.xml

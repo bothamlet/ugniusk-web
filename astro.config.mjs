@@ -4,7 +4,7 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://ugniusk-web-pied.vercel.app',
+  site: 'https://ugniusliberman.me',
   integrations: [sitemap()],
   vite: {
     build: {
