@@ -375,12 +375,12 @@ const thirdVisual = project.gallery?.[2];
   }
 
   /* The Status value and its repository mark share one row, so the mark sits
-     right after the word instead of at the far edge of the cell. The 4px gap is
-     what keeps it tight; the mark's own 44px target follows it. */
+     right after the word instead of at the far edge of the cell. The 8px gap
+     gives the mark comfortable breathing space; its own 44px target follows. */
   .project-meta-item__status {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
     min-width: 0;
   }
 
@@ -391,8 +391,9 @@ const thirdVisual = project.gallery?.[2];
 
   .project-repo {
     display: inline-flex;
-    /* Left-aligned inside its 44px touch target, so the mark itself hugs the
-       status word and only the invisible target extends to the right. */
+    /* Left-aligned inside its 44px touch target, so the gap after the status
+       word is the only space before the mark and the target's extra width
+       extends to the right. */
     flex: 0 0 auto;
     align-items: center;
     justify-content: flex-start;

@@ -459,9 +459,11 @@ for (const [slug, project] of Object.entries(repositories)) {
     const [valueBox, linkBox] = [await value.boundingBox(), await link.boundingBox()];
     expect(linkBox!.width).toBeGreaterThanOrEqual(44);
     expect(linkBox!.height).toBeGreaterThanOrEqual(44);
+    // The row owns the spacing: a comfortable 8px after the word, before the mark.
+    expect(await status.evaluate((element) => getComputedStyle(element).gap)).toBe('8px');
     const gap = linkBox!.x - (valueBox!.x + valueBox!.width);
-    expect(gap).toBeGreaterThanOrEqual(0);
-    expect(gap).toBeLessThanOrEqual(8);
+    expect(gap).toBeGreaterThanOrEqual(7.5);
+    expect(gap).toBeLessThanOrEqual(8.5);
     expect(onSameLine(valueBox!, linkBox!), 'mark shares the status line').toBe(true);
   });
 }
@@ -700,11 +702,11 @@ for (const width of [320, 390, 430, 600, 900, 901, 1000, 1440]) {
       expect(iconBox.height, where).toBeGreaterThanOrEqual(18);
       expect(iconBox.height, where).toBeLessThanOrEqual(19);
 
-      // Immediately after the status word: the gap is the row's own spacing,
-      // never the distance across the cell to a right-aligned mark.
+      // Immediately after the status word: the gap is the row's own 8px
+      // spacing, never the distance across the cell to a right-aligned mark.
       const gap = linkBox.x - (valueBox.x + valueBox.width);
-      expect(gap, where).toBeGreaterThanOrEqual(0);
-      expect(gap, where).toBeLessThanOrEqual(8);
+      expect(gap, where).toBeGreaterThanOrEqual(7.5);
+      expect(gap, where).toBeLessThanOrEqual(8.5);
       expect(onSameLine(valueBox, linkBox), `${where} mark shares the status line`).toBe(true);
 
       // The status word stays whole - no wrap, no ellipsis.
@@ -1046,6 +1048,73 @@ for (const width of [320, 390, 1440]) {
     }
   });
 }
+
+test('Selected Work subtext and year step down to 95% with a tighter row gap', async ({ page }) => {
+  const cases = [
+    // Below the desktop breakpoint the descriptor sits on its 0.97375rem floor.
+    { width: 320, name: 24, descriptor: 15.58 },
+    { width: 1440, name: 36, descriptor: 15.58 },
+    // 1822-2000px is the only band where the desktop clamp takes its 0.855vw
+    // middle term: 95% of the former 0.9vw middle at the same viewport.
+    { width: 1920, name: 36, descriptor: 16.416 },
+  ];
+
+  for (const { width, name, descriptor } of cases) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    await page.evaluate(() => document.fonts.ready);
+    const where = `${width}px`;
+
+    const cards = await page.locator('.selected-work__item').evaluateAll((items) =>
+      items.map((item) => {
+        const size = (selector: string) => {
+          const element = item.querySelector(selector);
+          return element ? parseFloat(getComputedStyle(element).fontSize) : null;
+        };
+        const meta = item.querySelector('.selected-work__meta')!;
+        const label = item.querySelector('.selected-work__descriptor')!;
+        const year = item.querySelector('.selected-work__year')!;
+        return {
+          title: item.querySelector('.selected-work__name')!.textContent,
+          name: size('.selected-work__name'),
+          descriptor: size('.selected-work__descriptor'),
+          year: size('.selected-work__year'),
+          planned: size('.selected-work__planned'),
+          rowGap: parseFloat(getComputedStyle(meta).rowGap),
+          labelOverflow: {
+            scrollWidth: label.scrollWidth,
+            clientWidth: label.clientWidth,
+            scrollHeight: label.scrollHeight,
+            clientHeight: label.clientHeight,
+          },
+          yearRight: year.getBoundingClientRect().right,
+          cardRight: item.getBoundingClientRect().right,
+        };
+      }));
+
+    expect(cards, where).toHaveLength(7);
+    for (const card of cards) {
+      expect(card.name, `${card.title} name ${where}`).toBeCloseTo(name, 2);
+      expect(card.descriptor, `${card.title} descriptor ${where}`).toBeCloseTo(descriptor, 2);
+      // The year and the planned tag keep one size, both 95% of 0.95rem.
+      expect(card.year, `${card.title} year ${where}`).toBeCloseTo(14.44, 2);
+      if (card.planned !== null) {
+        expect(card.planned, `${card.title} planned ${where}`).toBeCloseTo(14.44, 2);
+      }
+      // The label and year rows close up against the name row.
+      expect(card.rowGap, `${card.title} row gap ${where}`).toBeCloseTo(1.6, 2);
+      // The planned descriptors are the longest strings on the cards and carry
+      // no clamp: at every width the smaller type still shows all of the copy.
+      if (card.planned !== null) {
+        expect(card.labelOverflow.scrollHeight, `${card.title} label height ${where}`)
+          .toBeLessThanOrEqual(card.labelOverflow.clientHeight + 1);
+        expect(card.labelOverflow.scrollWidth, `${card.title} label width ${where}`)
+          .toBeLessThanOrEqual(card.labelOverflow.clientWidth + 1);
+      }
+      expect(card.yearRight, `${card.title} year inside card ${where}`).toBeLessThanOrEqual(card.cardRight);
+    }
+  }
+});
 
 test('planned cards share the card hover effect without being clickable', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
