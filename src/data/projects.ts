@@ -46,7 +46,7 @@ export type SelectedWorkCard = Pick<
 	Project,
 	"title" | "slug" | "year" | "label" | "image" | "cardImage" | "imageAlt"
 > & {
-	/** Shown as an italic note at the end of the name row; the card stays inert. */
+	/** Shown as an italic note at the end of the name row; the card has no link. */
 	planned?: boolean;
 };
 
@@ -332,11 +332,10 @@ const allProjects: Project[] = [
 
 export const projects = allProjects.filter((project) => !project.hidden);
 
-// Horseflight is planned, not shipped, so it has no page or editorial: it closes
+// Horseflight is planned, not shipped, so it has no page or editorial: it leads
 // Selected Work as a card-only entry. Detail routes, the sitemap and More Works
 // read `projects`, which stays at the five shipped projects.
 export const selectedWork: SelectedWorkCard[] = [
-	...projects,
 	{
 		title: "Horseflight",
 		slug: "horseflight",
@@ -347,4 +346,5 @@ export const selectedWork: SelectedWorkCard[] = [
 			"Horseflight - the cream knight mark above the Horseflight wordmark on a navy field",
 		planned: true,
 	},
+	...projects,
 ];

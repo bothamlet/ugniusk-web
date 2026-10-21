@@ -18,7 +18,7 @@ const { cards } = Astro.props;
     {
       cards.map((card) => {
         // A planned entry has no project page, so it renders as a plain div: no
-        // href, no focus stop, and no hover affordance on the card.
+        // href and no focus stop, while keeping the shared card hover effect.
         const Card = card.planned ? 'div' : 'a';
         return (
           <article class:list={["selected-work__item", card.planned && "selected-work__item--planned"]}>
@@ -87,9 +87,9 @@ const { cards } = Astro.props;
     transition: scale 500ms cubic-bezier(0.16, 0.8, 0.2, 1);
   }
 
-  /* Only linked cards react to hover. The planned card is inert, so it keeps
-     its size and its still image. */
-  .selected-work__item:not(.selected-work__item--planned):hover {
+  /* Every card reacts to hover, linked or not: the planned card only lacks the
+     link, not the affordance. */
+  .selected-work__item:hover {
     scale: 0.97;
   }
 
@@ -120,12 +120,12 @@ const { cards } = Astro.props;
     border-radius: 1rem;
   }
 
-  .selected-work__item:not(.selected-work__item--planned):hover :global(.product-shot__ghost) {
+  .selected-work__item:hover :global(.product-shot__ghost) {
     opacity: 1;
     transform: scale(1);
   }
 
-  .selected-work__item:not(.selected-work__item--planned):hover :global(.product-shot__img) {
+  .selected-work__item:hover :global(.product-shot__img) {
     opacity: 0.4;
   }
 

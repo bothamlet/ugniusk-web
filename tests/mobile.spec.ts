@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs';
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/_vercel/**', route => route.fulfill({ status: 204 }));
@@ -635,7 +635,7 @@ const horseflight = {
 };
 
 for (const width of [320, 390, 1440]) {
-  test(`Horseflight closes Selected Work as an inert sixth card at ${width}px`, async ({ page }) => {
+  test(`Horseflight leads Selected Work as a non-clickable card at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
     await page.evaluate(() => document.fonts.ready);
@@ -643,10 +643,10 @@ for (const width of [320, 390, 1440]) {
     const cards = page.locator('.selected-work__item');
     await expect(cards).toHaveCount(6);
     await expect(page.locator('a.selected-work__link')).toHaveCount(5);
-    const card = cards.nth(5);
+    const card = cards.nth(0);
     await expect(card).toHaveClass(/selected-work__item--planned/);
-    // It closes the list, after the last shipped project.
-    await expect(cards.nth(4).locator('.selected-work__name')).toHaveText('Surface Runoff Model');
+    // It leads the list, ahead of the five shipped projects.
+    await expect(cards.nth(1).locator('.selected-work__name')).toHaveText("Today's Brief");
 
     // Non-interactive: a div wrapper with no href, role, tab stop or link.
     const wrapper = card.locator('.selected-work__link');
@@ -720,30 +720,36 @@ for (const width of [320, 390, 1440]) {
   });
 }
 
-test('the planned card stays still while the shipped cards keep their hover affordance', async ({ page }) => {
+test('Horseflight shares the card hover effect without being clickable', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
   const cards = page.locator('.selected-work__item');
-  const plannedCard = cards.nth(5);
-  await plannedCard.scrollIntoViewIfNeeded();
-  await plannedCard.hover();
-  expect(await plannedCard.evaluate((element) => getComputedStyle(element).scale)).toBe('none');
-  await expect(plannedCard.locator('.product-shot__ghost')).toHaveCSS('opacity', '0');
-  await expect(plannedCard.locator('.product-shot__img')).toHaveCSS('opacity', '1');
+  const horseflightCard = cards.nth(0);
+  await expect(horseflightCard.locator('.selected-work__name')).toHaveText('Horseflight');
 
-  // Clicking the inert card never navigates.
+  // The planned card settles on the shared hover state - shrunk card, smaller
+  // ghost copy at full opacity, dimmed base image - not a still, disabled look.
+  const expectHoverState = async (card: Locator) => {
+    await expect.poll(() => card.evaluate((element) => getComputedStyle(element).scale)).toBe('0.97');
+    await expect(card.locator('.product-shot__ghost')).toHaveCSS('opacity', '1');
+    await expect(card.locator('.product-shot__img')).toHaveCSS('opacity', '0.4');
+  };
+  await horseflightCard.scrollIntoViewIfNeeded();
+  await horseflightCard.hover();
+  await expectHoverState(horseflightCard);
+
+  // Hovering it never turns it into a link: clicking does not navigate.
   const before = page.url();
-  await plannedCard.locator('.product-shot').click();
+  await horseflightCard.locator('.product-shot').click();
   await page.waitForTimeout(500);
   expect(page.url()).toBe(before);
 
-  // The first five are still links, and still react to hover.
-  const first = cards.nth(0);
-  expect(await first.locator('.selected-work__link').evaluate((element) => element.tagName)).toBe('A');
-  await expect(first.locator('.selected-work__link')).toHaveAttribute('href', '/projects/todays-brief/');
-  await first.scrollIntoViewIfNeeded();
-  await first.hover();
-  await expect.poll(() => first.evaluate((element) => getComputedStyle(element).scale)).not.toBe('none');
+  // The shipped cards still link out, and reach the identical hover state.
+  const linkedCard = cards.nth(1);
+  expect(await linkedCard.locator('.selected-work__link').evaluate((element) => element.tagName)).toBe('A');
+  await expect(linkedCard.locator('.selected-work__link')).toHaveAttribute('href', '/projects/todays-brief/');
+  await linkedCard.hover();
+  await expectHoverState(linkedCard);
 });
 
 test('Horseflight serves its card assets and stays out of routes, the sitemap and More Works', async ({ page }) => {
