@@ -896,30 +896,81 @@ test("Today's Brief ends its visuals after the second image", async ({ page }) =
     expect(overflow, where).toBeLessThanOrEqual(0);
   }
 
-  // The other four project pages still render all three gallery visuals from the
-  // built pages, which is the shipped artefact.
-  const threeVisualPages: Record<string, string[]> = {
+  // The other four project pages render their authored gallery visuals in the
+  // built pages, which is the shipped artefact. Today's Brief authors two gallery
+  // images and JUKdata renders two: its mid-page technology strip is hidden, so
+  // its expected list drops jukdata-2 and keeps the hero and detail bands.
+  const visualPages: Record<string, string[]> = {
     'this-site': [
       '/screenshots/this-site-card.webp',
       '/screenshots/this-site-overview.webp',
       '/screenshots/this-site-detail.webp',
     ],
     chap: ['/chap-card-full.webp', '/images/projects/chap-2.webp', '/images/projects/chap-3.webp'],
-    jukdata: ['/jukdata-card.webp', '/images/projects/jukdata-2.webp', '/images/projects/jukdata-3.webp'],
+    jukdata: ['/jukdata-card.webp', '/images/projects/jukdata-3.webp'],
     'surface-runoff': [
       '/images/projects/surface-runoff-rain-storm.webp',
       '/images/projects/surface-runoff-water-depth.webp',
       '/images/projects/surface-runoff-soil-saturation.webp',
     ],
   };
-  for (const [slug, sources] of Object.entries(threeVisualPages)) {
+  for (const [slug, sources] of Object.entries(visualPages)) {
     const html = readDist(`/projects/${slug}/index.html`);
-    expect(html.match(/class="project-visual-full/g), slug).toHaveLength(3);
+    // One band per authored source: three everywhere except JUKdata's two.
+    expect(html.match(/class="project-visual-full/g), slug).toHaveLength(sources.length);
     for (const source of sources) expect(html, `${slug} ${source}`).toContain(`src="${source}"`);
   }
   const today = readDist('/projects/todays-brief/index.html');
   expect(today.match(/class="project-visual-full/g)).toHaveLength(2);
   expect(today).not.toContain('project-visual-placeholder');
+  const jukdata = readDist('/projects/jukdata/index.html');
+  expect(jukdata).not.toContain('jukdata-2.webp');
+});
+
+// JUKdata's second gallery image is a technology logo strip that reads as a
+// divider, so the whole band is skipped for that project. The hero and detail
+// bands stay, Overview hands straight over to Technical, and no empty band or
+// extra gap is left behind where the strip used to sit.
+test('JUKdata skips its technology strip between Overview and Technical', async ({ page }) => {
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 1000 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/projects/jukdata/');
+    await page.evaluate(() => document.fonts.ready);
+    const where = `${viewport.width}px`;
+
+    const visuals = page.locator('.project-visual-full');
+    await expect(visuals, where).toHaveCount(2);
+    const images = visuals.locator('img');
+    await expect(images, where).toHaveCount(2);
+    await expect(images.nth(0), where).toHaveAttribute('src', '/jukdata-card.webp');
+    await expect(images.nth(1), where).toHaveAttribute('src', '/images/projects/jukdata-3.webp');
+    for (const image of await images.all()) {
+      await image.scrollIntoViewIfNeeded();
+      await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(0);
+    }
+    await expect(page.locator('img[src*="jukdata-2"]'), where).toHaveCount(0);
+    await expect(page.locator('.project-visual-placeholder'), where).toHaveCount(0);
+    await expect(page.locator('.project-visual-code'), where).toHaveCount(0);
+
+    // Overview's next sibling is the Technical column itself, so the band was
+    // removed outright rather than rendered as an empty box.
+    const overview = page.locator('.project-editorial').first();
+    await expect(overview.locator('.project-editorial-label'), where).toHaveText('Overview');
+    const technical = page.locator('.project-editorial--left');
+    const nextSibling = await overview.evaluate((element) => [...(element.nextElementSibling?.classList ?? [])]);
+    expect(nextSibling, where).toContain('project-editorial--left');
+    expect(nextSibling, where).not.toContain('project-visual-full');
+    const [overviewBox, technicalBox] = [(await overview.boundingBox())!, (await technical.boundingBox())!];
+    expect(technicalBox.y, `${where} no orphan band`).toBeCloseTo(overviewBox.y + overviewBox.height, 0);
+
+    // The Reflection column below the detail band is untouched.
+    const reflection = page.locator('.project-editorial').last();
+    await expect(reflection.locator('.project-editorial-label'), where).toHaveText('Reflection');
+    await expect(reflection, where).toContainText('Warming up the data');
+
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    expect(overflow, where).toBeLessThanOrEqual(0);
+  }
 });
 
 // Planned cards lead Selected Work: card-only entries with no page, route or

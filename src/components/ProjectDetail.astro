@@ -106,8 +106,12 @@ const thirdVisual = project.gallery?.[2];
       </div>
     </section>
 
-    <!-- Second visual -->
-    <ProjectVisual src={project.gallery?.[1]} alt={project.galleryAlt?.[1] ?? `${project.title} - overview`} code={project.code} inset={project.slug === "todays-brief"} />
+    <!-- Second visual - JUKdata's second gallery image is its technology logo
+         strip, which reads as a divider rather than a project screenshot, so the
+         whole band is skipped for that project. -->
+    {project.slug !== 'jukdata' && (
+      <ProjectVisual src={project.gallery?.[1]} alt={project.galleryAlt?.[1] ?? `${project.title} - overview`} code={project.code} inset={project.slug === "todays-brief"} />
+    )}
 
     <!-- Second editorial - left column -->
     <section class="project-editorial project-editorial--left">
