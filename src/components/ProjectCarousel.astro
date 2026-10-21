@@ -220,6 +220,10 @@ const { cards } = Astro.props;
        the display-size name, so it centres on the name instead. */
     align-self: center;
     font-style: italic;
+    /* The site turns synthesis off globally and IBM Plex Mono ships regular
+       only, so the desktop label would compute italic but draw upright: let
+       this one element synthesise the italic. */
+    font-synthesis: style;
   }
 
   @media (min-width: 1200px) {

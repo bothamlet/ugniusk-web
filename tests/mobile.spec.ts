@@ -670,6 +670,8 @@ for (const width of [320, 390, 1440]) {
     const planned = card.locator('.selected-work__planned');
     await expect(planned).toHaveText('Planned');
     expect(await planned.evaluate((element) => getComputedStyle(element).fontStyle)).toBe('italic');
+    // IBM Plex Mono ships regular only, so the italic needs local style synthesis.
+    expect(await planned.evaluate((element) => getComputedStyle(element).fontSynthesisStyle)).toBe('auto');
     const [nameBox, plannedBox, yearBox, cardBox] = [
       (await name.boundingBox())!,
       (await planned.boundingBox())!,
