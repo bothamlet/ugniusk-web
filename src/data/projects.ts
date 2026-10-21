@@ -332,10 +332,21 @@ const allProjects: Project[] = [
 
 export const projects = allProjects.filter((project) => !project.hidden);
 
-// Horseflight is planned, not shipped, so it has no page or editorial: it leads
-// Selected Work as a card-only entry. Detail routes, the sitemap and More Works
-// read `projects`, which stays at the five shipped projects.
+// Diucon and Horseflight are planned, not shipped, so they have no page or
+// editorial: they lead Selected Work as card-only entries. Detail routes, the
+// sitemap and More Works read `projects`, which stays at the five shipped
+// projects.
 export const selectedWork: SelectedWorkCard[] = [
+	{
+		title: "diucon",
+		slug: "diucon",
+		year: "2026",
+		label: "E-commerce Insights Platform",
+		image: "/images/projects/diucon-card.webp",
+		imageAlt:
+			"diucon - the serif wordmark with a red dot above the i on a warm cream field",
+		planned: true,
+	},
 	{
 		title: "Horseflight",
 		slug: "horseflight",

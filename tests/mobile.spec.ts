@@ -623,88 +623,123 @@ test("Today's Brief inset visual fills its side gutters with the screenshot's pa
   await expect(page.locator('.project-visual-full').nth(1)).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 });
 
-const horseflight = {
-  title: 'Horseflight',
-  label: 'Occasionally Brilliant Chess Engine',
-  year: '2026',
-  image: '/images/projects/horseflight-card.webp',
-  variants: [
-    '/images/projects/horseflight-card-800.webp',
-    '/images/projects/horseflight-card-1600.webp',
-  ],
+// Planned cards lead Selected Work: card-only entries with no page, route or
+// More Works slot.
+const plannedCards = [
+  {
+    title: 'diucon',
+    label: 'E-commerce Insights Platform',
+    year: '2026',
+    image: '/images/projects/diucon-card.webp',
+    variants: [
+      '/images/projects/diucon-card-800.webp',
+      '/images/projects/diucon-card-1600.webp',
+    ],
+  },
+  {
+    title: 'Horseflight',
+    label: 'Occasionally Brilliant Chess Engine',
+    year: '2026',
+    image: '/images/projects/horseflight-card.webp',
+    variants: [
+      '/images/projects/horseflight-card-800.webp',
+      '/images/projects/horseflight-card-1600.webp',
+    ],
+  },
+];
+
+const assertPlannedCard = async (card: Locator, plannedCard: (typeof plannedCards)[number]) => {
+  await expect(card).toHaveClass(/selected-work__item--planned/);
+
+  // Non-interactive: a div wrapper with no href, role, tab stop or link.
+  const wrapper = card.locator('.selected-work__link');
+  expect(await wrapper.evaluate((element) => element.tagName)).toBe('DIV');
+  expect(await wrapper.getAttribute('href')).toBeNull();
+  expect(await wrapper.getAttribute('role')).toBeNull();
+  expect(await wrapper.getAttribute('tabindex')).toBeNull();
+  await expect(card.locator('a')).toHaveCount(0);
+  await expect(card.getByRole('link')).toHaveCount(0);
+  expect(await wrapper.evaluate((element) => getComputedStyle(element).cursor)).toBe('auto');
+
+  // Exact card copy.
+  const name = card.locator('.selected-work__name');
+  const descriptor = card.locator('.selected-work__descriptor');
+  const year = card.locator('.selected-work__year');
+  await expect(name).toHaveText(plannedCard.title);
+  await expect(descriptor).toHaveText(plannedCard.label);
+  await expect(year).toHaveText(plannedCard.year);
+
+  // 'Planned' is italic, after the name, and right-aligned with the year below.
+  const planned = card.locator('.selected-work__planned');
+  await expect(planned).toHaveText('Planned');
+  expect(await planned.evaluate((element) => getComputedStyle(element).fontStyle)).toBe('italic');
+  // IBM Plex Mono ships regular only, so the italic needs local style synthesis.
+  expect(await planned.evaluate((element) => getComputedStyle(element).fontSynthesisStyle)).toBe('auto');
+  const [nameBox, plannedBox, yearBox, cardBox] = [
+    (await name.boundingBox())!,
+    (await planned.boundingBox())!,
+    (await year.boundingBox())!,
+    (await card.boundingBox())!,
+  ];
+  expect(plannedBox.x).toBeGreaterThan(nameBox.x + nameBox.width);
+  // The shared 2px optical lift sits the label just above the name's centre.
+  const centerOffset = plannedBox.y + plannedBox.height / 2 - (nameBox.y + nameBox.height / 2);
+  expect(centerOffset).toBeGreaterThanOrEqual(-3);
+  expect(centerOffset).toBeLessThanOrEqual(-1);
+  expect(plannedBox.y).toBeGreaterThanOrEqual(nameBox.y - 3);
+  expect(plannedBox.y + plannedBox.height).toBeLessThanOrEqual(nameBox.y + nameBox.height + 1);
+  expect(Math.abs(plannedBox.x + plannedBox.width - (yearBox.x + yearBox.width))).toBeLessThanOrEqual(1);
+  expect(plannedBox.x + plannedBox.width).toBeLessThanOrEqual(cardBox.x + cardBox.width);
+  expect(plannedBox.x).toBeGreaterThanOrEqual(cardBox.x);
+
+  // The name keeps its card size at every width. The planned card is exempt
+  // from the shared two-line clamp, so its full descriptor is visible - no
+  // overflow at any width.
+  const nameSize = await name.evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+  expect(nameSize).toBeGreaterThanOrEqual(24);
+  const descriptorBox = await descriptor.evaluate((element) => ({
+    text: element.textContent,
+    scrollHeight: element.scrollHeight,
+    clientHeight: element.clientHeight,
+    scrollWidth: element.scrollWidth,
+    clientWidth: element.clientWidth,
+    lineClamp: getComputedStyle(element).webkitLineClamp,
+  }));
+  expect(descriptorBox.text).toBe(plannedCard.label);
+  expect(descriptorBox.lineClamp).toBe('none');
+  expect(descriptorBox.scrollHeight).toBeLessThanOrEqual(descriptorBox.clientHeight + 1);
+  expect(descriptorBox.scrollWidth).toBeLessThanOrEqual(descriptorBox.clientWidth + 1);
+
+  // The generated card image and both srcset variants are wired and load.
+  const image = card.locator('.product-shot__img');
+  await expect(image).toHaveAttribute('src', plannedCard.image);
+  const srcset = (await image.getAttribute('srcset')) ?? '';
+  expect(srcset).toContain(`${plannedCard.image.replace(/\.webp$/, '-800.webp')} 800w`);
+  expect(srcset).toContain(`${plannedCard.image.replace(/\.webp$/, '-1600.webp')} 1600w`);
+  await image.scrollIntoViewIfNeeded();
+  await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(0);
 };
 
 for (const width of [320, 390, 1440]) {
-  test(`Horseflight leads Selected Work as a non-clickable card at ${width}px`, async ({ page }) => {
+  test(`planned cards lead Selected Work as non-clickable cards at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
     await page.evaluate(() => document.fonts.ready);
 
     const cards = page.locator('.selected-work__item');
-    await expect(cards).toHaveCount(6);
+    await expect(cards).toHaveCount(7);
     await expect(page.locator('a.selected-work__link')).toHaveCount(5);
-    const card = cards.nth(0);
-    await expect(card).toHaveClass(/selected-work__item--planned/);
-    // It leads the list, ahead of the five shipped projects.
-    await expect(cards.nth(1).locator('.selected-work__name')).toHaveText("Today's Brief");
+    await expect(page.locator('.selected-work__item--planned')).toHaveCount(2);
+    // Diucon leads, Horseflight follows, then the five shipped projects.
+    await expect(cards.nth(0).locator('.selected-work__name')).toHaveText('diucon');
+    await expect(cards.nth(1).locator('.selected-work__name')).toHaveText('Horseflight');
+    await expect(cards.nth(2).locator('.selected-work__name')).toHaveText("Today's Brief");
 
-    // Non-interactive: a div wrapper with no href, role, tab stop or link.
-    const wrapper = card.locator('.selected-work__link');
-    expect(await wrapper.evaluate((element) => element.tagName)).toBe('DIV');
-    expect(await wrapper.getAttribute('href')).toBeNull();
-    expect(await wrapper.getAttribute('role')).toBeNull();
-    expect(await wrapper.getAttribute('tabindex')).toBeNull();
-    await expect(card.locator('a')).toHaveCount(0);
-    await expect(card.getByRole('link')).toHaveCount(0);
-    expect(await wrapper.evaluate((element) => getComputedStyle(element).cursor)).toBe('auto');
+    for (const [index, plannedCard] of plannedCards.entries()) {
+      await assertPlannedCard(cards.nth(index), plannedCard);
+    }
 
-    // Exact card copy.
-    const name = card.locator('.selected-work__name');
-    const descriptor = card.locator('.selected-work__descriptor');
-    const year = card.locator('.selected-work__year');
-    await expect(name).toHaveText(horseflight.title);
-    await expect(descriptor).toHaveText(horseflight.label);
-    await expect(year).toHaveText(horseflight.year);
-
-    // 'Planned' is italic, after the name, and right-aligned with the year below.
-    const planned = card.locator('.selected-work__planned');
-    await expect(planned).toHaveText('Planned');
-    expect(await planned.evaluate((element) => getComputedStyle(element).fontStyle)).toBe('italic');
-    // IBM Plex Mono ships regular only, so the italic needs local style synthesis.
-    expect(await planned.evaluate((element) => getComputedStyle(element).fontSynthesisStyle)).toBe('auto');
-    const [nameBox, plannedBox, yearBox, cardBox] = [
-      (await name.boundingBox())!,
-      (await planned.boundingBox())!,
-      (await year.boundingBox())!,
-      (await card.boundingBox())!,
-    ];
-    expect(plannedBox.x).toBeGreaterThan(nameBox.x + nameBox.width);
-    // It is vertically centred on the name, not dropped onto its baseline.
-    expect(Math.abs(plannedBox.y + plannedBox.height / 2 - (nameBox.y + nameBox.height / 2))).toBeLessThanOrEqual(1);
-    expect(plannedBox.y).toBeGreaterThanOrEqual(nameBox.y - 1);
-    expect(plannedBox.y + plannedBox.height).toBeLessThanOrEqual(nameBox.y + nameBox.height + 1);
-    expect(Math.abs(plannedBox.x + plannedBox.width - (yearBox.x + yearBox.width))).toBeLessThanOrEqual(1);
-    expect(plannedBox.x + plannedBox.width).toBeLessThanOrEqual(cardBox.x + cardBox.width);
-    expect(plannedBox.x).toBeGreaterThanOrEqual(cardBox.x);
-
-    // The name keeps its card size at every width. The planned card is exempt
-    // from the shared two-line clamp, so its full descriptor is visible - no
-    // vertical overflow at any width - while the five shipped cards keep it.
-    const nameSize = await name.evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
-    expect(nameSize).toBeGreaterThanOrEqual(24);
-    const descriptorBox = await descriptor.evaluate((element) => ({
-      text: element.textContent,
-      scrollHeight: element.scrollHeight,
-      clientHeight: element.clientHeight,
-      scrollWidth: element.scrollWidth,
-      clientWidth: element.clientWidth,
-      lineClamp: getComputedStyle(element).webkitLineClamp,
-    }));
-    expect(descriptorBox.text).toBe(horseflight.label);
-    expect(descriptorBox.lineClamp).toBe('none');
-    expect(descriptorBox.scrollHeight).toBeLessThanOrEqual(descriptorBox.clientHeight + 1);
-    expect(descriptorBox.scrollWidth).toBeLessThanOrEqual(descriptorBox.clientWidth + 1);
-
+    // The five shipped cards keep the shared two-line descriptor clamp.
     const shipped = page.locator('.selected-work__item:not(.selected-work__item--planned) .selected-work__descriptor');
     await expect(shipped).toHaveCount(5);
     const shippedClamps = await shipped.evaluateAll(elements =>
@@ -712,75 +747,71 @@ for (const width of [320, 390, 1440]) {
     for (const lineClamp of shippedClamps) {
       expect(lineClamp).toBe('2');
     }
-
-    // The generated card image and both srcset variants are wired and load.
-    const image = card.locator('.product-shot__img');
-    await expect(image).toHaveAttribute('src', horseflight.image);
-    const srcset = (await image.getAttribute('srcset')) ?? '';
-    expect(srcset).toContain('/images/projects/horseflight-card-800.webp 800w');
-    expect(srcset).toContain('/images/projects/horseflight-card-1600.webp 1600w');
-    await image.scrollIntoViewIfNeeded();
-    await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(0);
   });
 }
 
-test('Horseflight shares the card hover effect without being clickable', async ({ page }) => {
+test('planned cards share the card hover effect without being clickable', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
   const cards = page.locator('.selected-work__item');
-  const horseflightCard = cards.nth(0);
-  await expect(horseflightCard.locator('.selected-work__name')).toHaveText('Horseflight');
 
-  // The planned card settles on the shared hover state - shrunk card, smaller
+  // Each planned card settles on the shared hover state - shrunk card, smaller
   // ghost copy at full opacity, dimmed base image - not a still, disabled look.
   const expectHoverState = async (card: Locator) => {
     await expect.poll(() => card.evaluate((element) => getComputedStyle(element).scale)).toBe('0.97');
     await expect(card.locator('.product-shot__ghost')).toHaveCSS('opacity', '1');
     await expect(card.locator('.product-shot__img')).toHaveCSS('opacity', '0.4');
   };
-  await horseflightCard.scrollIntoViewIfNeeded();
-  await horseflightCard.hover();
-  await expectHoverState(horseflightCard);
+  for (const [index, plannedCard] of plannedCards.entries()) {
+    const card = cards.nth(index);
+    await expect(card.locator('.selected-work__name')).toHaveText(plannedCard.title);
+    await card.scrollIntoViewIfNeeded();
+    await card.hover();
+    await expectHoverState(card);
 
-  // Hovering it never turns it into a link: clicking does not navigate.
-  const before = page.url();
-  await horseflightCard.locator('.product-shot').click();
-  await page.waitForTimeout(500);
-  expect(page.url()).toBe(before);
+    // Hovering it never turns it into a link: clicking does not navigate.
+    const before = page.url();
+    await card.locator('.product-shot').click();
+    await page.waitForTimeout(500);
+    expect(page.url()).toBe(before);
+  }
 
   // The shipped cards still link out, and reach the identical hover state.
-  const linkedCard = cards.nth(1);
+  const linkedCard = cards.nth(2);
   expect(await linkedCard.locator('.selected-work__link').evaluate((element) => element.tagName)).toBe('A');
   await expect(linkedCard.locator('.selected-work__link')).toHaveAttribute('href', '/projects/todays-brief/');
   await linkedCard.hover();
   await expectHoverState(linkedCard);
 });
 
-test('Horseflight serves its card assets and stays out of routes, the sitemap and More Works', async ({ page }) => {
-  for (const url of [horseflight.image, ...horseflight.variants]) {
-    expect((await page.request.get(url)).status(), url).toBe(200);
+test('planned cards serve their assets and stay out of routes, the sitemap and More Works', async ({ page }) => {
+  for (const plannedCard of plannedCards) {
+    for (const url of [plannedCard.image, ...plannedCard.variants]) {
+      expect((await page.request.get(url)).status(), url).toBe(200);
+    }
+    // No detail page was generated for the planned cards.
+    const route = `/projects/${plannedCard.title.toLowerCase()}/`;
+    expect((await page.request.get(route)).status(), route).toBe(404);
   }
 
-  // No detail page was generated for the planned card.
-  expect((await page.request.get('/projects/horseflight/')).status()).toBe(404);
-
-  // The built sitemap lists the five shipped projects and nothing for Horseflight.
+  // The built sitemap lists the five shipped projects and no planned card.
   const sitemap = readFileSync(new URL('../dist/sitemap-0.xml', import.meta.url), 'utf8');
   expect(sitemap).toContain('/projects/todays-brief/');
   expect(sitemap).toContain('/projects/surface-runoff/');
-  expect(sitemap).not.toMatch(/horseflight/i);
+  expect(sitemap).not.toMatch(/diucon|horseflight/i);
 
-  // The homepage carries the card copy but never a link to a Horseflight route.
+  // The homepage carries the card copy but never a link to a planned route.
   const home = await (await page.request.get('/')).text();
+  expect(home).toContain('diucon');
   expect(home).toContain('Horseflight');
-  expect(home).not.toContain('href="/projects/horseflight');
-  expect(home).toContain('class="selected-work__item selected-work__item--planned"');
+  expect(home).not.toMatch(/href="\/projects\/(?:diucon|horseflight)/i);
+  expect(home.match(/class="selected-work__item selected-work__item--planned"/g)).toHaveLength(2);
 
   // More Works still draws from the shipped projects only.
   await page.goto('/projects/chap/');
   const moreWorks = page.locator('.project-more__name');
   await expect(moreWorks).toHaveCount(2);
   for (const more of await moreWorks.all()) {
-    expect((await more.textContent())?.toLowerCase()).not.toContain('horseflight');
+    expect((await more.textContent())?.toLowerCase()).not.toMatch(/diucon|horseflight/);
   }
 });
