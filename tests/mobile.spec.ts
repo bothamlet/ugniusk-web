@@ -86,6 +86,60 @@ test('gallery opens the original image without covering the project', async ({ p
   await expect(page).toHaveURL(/projects\/surface-runoff/);
 });
 
+// The shipped WebP assets use VP8 (lossy) or VP8X (extended) chunks whose
+// headers carry the pixel dimensions. Read from the shipped bytes so the
+// assertions below describe the asset itself.
+const webpSize = (path: string) => {
+  const bytes = readFileSync(new URL(`../dist${path}`, import.meta.url));
+  expect(bytes.toString('ascii', 0, 4), `${path} RIFF`).toBe('RIFF');
+  expect(bytes.toString('ascii', 8, 12), `${path} WEBP`).toBe('WEBP');
+  const chunk = bytes.toString('ascii', 12, 16);
+  if (chunk === 'VP8X') {
+    return { width: bytes.readUIntLE(24, 3) + 1, height: bytes.readUIntLE(27, 3) + 1 };
+  }
+  expect(chunk, path).toBe('VP8 ');
+  expect(bytes.subarray(23, 26), `${path} VP8 start code`).toEqual(Buffer.from([0x9d, 0x01, 0x2a]));
+  return { width: bytes.readUInt16LE(26) & 0x3fff, height: bytes.readUInt16LE(28) & 0x3fff };
+};
+
+test('This Site hero ships a 2880x1620 export with honest responsive variants', async ({ page }) => {
+  // Captured at a 1440x810 CSS viewport with deviceScaleFactor 2.
+  expect(webpSize('/screenshots/this-site-card.webp')).toEqual({ width: 2880, height: 1620 });
+  const variants = {
+    '/screenshots/this-site-card-800.webp': 800,
+    '/screenshots/this-site-card-1600.webp': 1600,
+  };
+  for (const [path, descriptor] of Object.entries(variants)) {
+    // The srcset width descriptor is the file's real pixel width, not a label.
+    expect(webpSize(path), path).toEqual({ width: descriptor, height: descriptor * 9 / 16 });
+  }
+
+  // ProjectVisual reserves the full export's intrinsic box in the built page.
+  const projectPage = readDist('/projects/this-site/index.html');
+  expect(projectPage).toMatch(/<img src="\/screenshots\/this-site-card\.webp"[^>]*width="2880" height="1620"/);
+
+  // The homepage card offers both variants beside the full file.
+  await page.goto('/');
+  await page.evaluate(() => document.fonts.ready);
+  const card = page.locator('a[href="/projects/this-site/"] .product-shot__img').first();
+  await expect(card).toHaveAttribute('src', '/screenshots/this-site-card.webp');
+  const srcset = (await card.getAttribute('srcset')) ?? '';
+  for (const [path, descriptor] of Object.entries(variants)) {
+    expect(srcset, path).toContain(`${path} ${descriptor}w`);
+  }
+
+  for (const path of ['/screenshots/this-site-card.webp', ...Object.keys(variants)]) {
+    const response = await page.request.get(path);
+    expect(response.status(), path).toBe(200);
+    expect(response.headers()['content-type'], path).toBe('image/webp');
+  }
+
+  // Surface Runoff is untouched: the 894px card cannot claim the 1400px gallery
+  // figure, which is a different frame (t=0.00 min) from the card's t=4.50 min.
+  expect(webpSize('/images/projects/surface-runoff-card.webp')).toEqual({ width: 894, height: 503 });
+  expect(webpSize('/images/projects/surface-runoff-water-depth.webp')).toEqual({ width: 1400, height: 783 });
+});
+
 test('mobile anchor navigation clears the fixed header', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
