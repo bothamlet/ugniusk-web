@@ -24,6 +24,8 @@ export interface Project {
 	gallery?: string[];
 	imageAlt?: string;
 	ogImage?: string;
+	/** Describes the social card itself, which may crop the project image differently. */
+	ogImageAlt?: string;
 	galleryAlt?: string[];
 	technical?: string;
 	/** Kept in the data but excluded site-wide: listings, page generation, sitemap. */
@@ -66,6 +68,9 @@ const allProjects: Project[] = [
 		image: "/images/projects/todays-brief-card.webp",
 		imageAlt:
 			"Today's Brief - the editorial wordmark above the six section markers, one filled",
+		ogImage: "/og/todays-brief-card.png",
+		ogImageAlt:
+			"Today's Brief - six section markers, one filled teal, above the TODAY'S BRIEF editorial wordmark on a cream paper field",
 		gallery: [
 			"/images/projects/todays-brief-card.webp",
 			"/images/projects/todays-brief-world.webp",
@@ -113,6 +118,8 @@ const allProjects: Project[] = [
 		repositoryUrl: "https://github.com/bothamlet/ugniusk-web",
 		image: "/screenshots/this-site-card.webp",
 		ogImage: "/og/this-site-card.png",
+		ogImageAlt:
+			"This Site - the UGNIUS LIBERMAN wordmark in off-white and magenta on black, with the social icons along the bottom edge",
 		imageAlt: "This Site homepage - the selected work carousel and editorial intro",
 		gallery: [
 			"/screenshots/this-site-card.webp",
@@ -159,6 +166,8 @@ const allProjects: Project[] = [
 		image: "/chap-card-full.webp",
 		cardImage: "/chap-card.webp",
 		ogImage: "/og/chap-card-full.png",
+		ogImageAlt:
+			"Chap - the Chap wordmark and purple dot beside a partly cropped phone showing an empty envelope dashboard",
 		imageAlt: "Chap - the app logo beside an iPhone showing an empty envelope dashboard",
 		gallery: [
 			"/chap-card-full.webp",
@@ -204,6 +213,8 @@ const allProjects: Project[] = [
 		repositoryUrl: "https://github.com/bothamlet/jukdata-site",
 		image: "/jukdata-card.webp",
 		ogImage: "/og/jukdata-card.png",
+		ogImageAlt:
+			"JUKdata - the corporate homepage hero on a warm dark field, with the navigation, the Lithuanian headline and two orange calls to action",
 		imageAlt: "JUKdata - corporate website homepage with a warm orange hero",
 		gallery: [
 			"/jukdata-card.webp",
@@ -293,6 +304,9 @@ const allProjects: Project[] = [
 		image: "/images/projects/surface-runoff-card.webp",
 		imageAlt:
 			"Surface Runoff Model - simulated water depth spreading across a digital elevation grid",
+		ogImage: "/og/surface-runoff-card.png",
+		ogImageAlt:
+			"Surface Runoff Model - a 3D plot of water depth on the terrain at t=4.50 min, with labelled X, Y and height axes, a water-depth colour scale and a terrain note",
 		gallery: [
 			"/images/projects/surface-runoff-rain-storm.webp",
 			"/images/projects/surface-runoff-water-depth.webp",

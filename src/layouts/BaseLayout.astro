@@ -11,9 +11,16 @@ interface Props {
   title: string;
   description: string;
   ogImage?: string;
+  /** Alt text for the social card itself; defaults to a description of the portfolio card. */
+  ogImageAlt?: string;
 }
 
-const { title, description, ogImage = '/og-image.png' } = Astro.props;
+const {
+  title,
+  description,
+  ogImage = '/og-image.png',
+  ogImageAlt = "Ugnius Liberman - designer and developer, portfolio and journal, on a paper-white field with a pink accent",
+} = Astro.props;
 // `site` is set in astro.config.mjs, but Astro types it as optional. Falling back
 // to the request URL keeps the build safe if that config ever regresses.
 const siteUrl = Astro.site ?? new URL(Astro.url);
@@ -49,10 +56,16 @@ const ogImageUrl = new URL(ogImage, siteUrl);
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:alt" content={ogImageAlt} />
+    <!-- Every shipped social card is a 1200x630 PNG, the generic fallback included. -->
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
     <script type="application/ld+json" is:inline set:html={JSON.stringify({
       '@context': 'https://schema.org',
       '@graph': [

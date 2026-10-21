@@ -503,6 +503,92 @@ test('built pages, robots and sitemaps advertise the public domain', () => {
   expect(sitemap).not.toContain(legacyOrigin);
 });
 
+// Every shipped social card is a 1200x630 PNG, so the expected image, alt text
+// and dimensions live here as literals: a page that regresses to the generic
+// fallback, or describes a cropped card inaccurately, fails this table.
+const socialCards: Record<string, { file: string; image: string; alt: string }> = {
+  '/': {
+    file: '/index.html',
+    image: '/og-image.png',
+    alt: 'Ugnius Liberman - designer and developer, portfolio and journal, on a paper-white field with a pink accent',
+  },
+  '/projects/todays-brief/': {
+    file: '/projects/todays-brief/index.html',
+    image: '/og/todays-brief-card.png',
+    alt: "Today's Brief - six section markers, one filled teal, above the TODAY'S BRIEF editorial wordmark on a cream paper field",
+  },
+  '/projects/this-site/': {
+    file: '/projects/this-site/index.html',
+    image: '/og/this-site-card.png',
+    alt: 'This Site - the UGNIUS LIBERMAN wordmark in off-white and magenta on black, with the social icons along the bottom edge',
+  },
+  '/projects/chap/': {
+    file: '/projects/chap/index.html',
+    image: '/og/chap-card-full.png',
+    alt: 'Chap - the Chap wordmark and purple dot beside a partly cropped phone showing an empty envelope dashboard',
+  },
+  '/projects/jukdata/': {
+    file: '/projects/jukdata/index.html',
+    image: '/og/jukdata-card.png',
+    alt: 'JUKdata - the corporate homepage hero on a warm dark field, with the navigation, the Lithuanian headline and two orange calls to action',
+  },
+  '/projects/surface-runoff/': {
+    file: '/projects/surface-runoff/index.html',
+    image: '/og/surface-runoff-card.png',
+    alt: 'Surface Runoff Model - a 3D plot of water depth on the terrain at t=4.50 min, with labelled X, Y and height axes, a water-depth colour scale and a terrain note',
+  },
+};
+
+test('built pages emit their social card image, alt text and fixed dimensions', () => {
+  for (const [path, card] of Object.entries(socialCards)) {
+    const html = readDist(card.file);
+    const image = `${publicOrigin}${card.image}`;
+    for (const key of ['og:image', 'twitter:image']) {
+      expect(metaContent(html, key), `${path} ${key}`).toBe(image);
+    }
+    for (const key of ['og:image:alt', 'twitter:image:alt']) {
+      expect(metaContent(html, key), `${path} ${key}`).toBe(card.alt);
+    }
+    expect(metaContent(html, 'og:image:width'), path).toBe('1200');
+    expect(metaContent(html, 'og:image:height'), path).toBe('630');
+    expect(metaContent(html, 'og:image:type'), path).toBe('image/png');
+  }
+
+  // Home keeps the generic card; each project carries its own, never the fallback.
+  const projectCards = Object.entries(socialCards)
+    .filter(([path]) => path !== '/')
+    .map(([, card]) => card.image);
+  expect(socialCards['/'].image).toBe('/og-image.png');
+  expect(new Set(projectCards).size).toBe(5);
+  expect(projectCards).not.toContain('/og-image.png');
+});
+
+// PNG: 8-byte signature, then the IHDR chunk whose first fields are width and
+// height, read straight from the built bytes rather than through an image library.
+test('social cards are real 1200x630 PNGs served as image/png', async ({ page }) => {
+  const pngSize = (path: string) => {
+    const bytes = readFileSync(new URL(`../dist${path}`, import.meta.url));
+    expect(bytes.subarray(0, 8), `${path} signature`).toEqual(
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    );
+    expect(bytes.toString('ascii', 12, 16), `${path} IHDR`).toBe('IHDR');
+    return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+  };
+
+  const images = [...new Set(Object.values(socialCards).map((card) => card.image))];
+  expect(images).toHaveLength(6);
+  for (const image of images) {
+    expect(pngSize(image), image).toEqual({ width: 1200, height: 630 });
+  }
+
+  // The two new cards are reachable over HTTP with the PNG content type.
+  for (const image of ['/og/todays-brief-card.png', '/og/surface-runoff-card.png']) {
+    const response = await page.request.get(image);
+    expect(response.status(), image).toBe(200);
+    expect(response.headers()['content-type'], image).toBe('image/png');
+  }
+});
+
 test('repository link is keyboard reachable with a visible focus ring', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/projects/jukdata/');
