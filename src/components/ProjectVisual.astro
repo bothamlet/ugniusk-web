@@ -81,6 +81,14 @@ const dims = src ? (IMAGE_DIMS[src] ?? { w: 1920, h: 1080 }) : undefined;
     margin-inline: auto;
   }
 
+  /* Today's Brief's inset visual is a newspaper page whose paper edge samples to
+     #fdfbf7. Painting the band that tone carries the page into the exposed side
+     gutters instead of framing it in the page white. Only the inset variant is
+     tinted; every other visual keeps the band transparent. */
+  .project-visual-full--inset {
+    background: #fdfbf7;
+  }
+
   .project-visual-image:focus-visible {
     outline: 3px solid var(--color-accent-deep);
     outline-offset: -3px;

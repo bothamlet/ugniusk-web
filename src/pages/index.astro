@@ -4,7 +4,7 @@ import BehindWork from '../components/BehindWork.astro';
 import ProjectCarousel from '../components/ProjectCarousel.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { projects } from '../data/projects';
+import { selectedWork } from '../data/projects';
 import { site } from '../data/site';
 ---
 
@@ -13,7 +13,7 @@ import { site } from '../data/site';
     <Hero name={site.name} socials={site.socials} />
     <div class="scroll-overlay">
       <BehindWork />
-      <ProjectCarousel projects={projects} />
+      <ProjectCarousel cards={selectedWork} />
       <section class="site-ender">
         <p class="site-ender__text">Based on the original works of Ugnius <span class="site-ender__accent">Liberman</span></p>
       </section>
@@ -25,7 +25,7 @@ import { site } from '../data/site';
 <script>
   // Only use JS exit animation in browsers without native view transitions (Firefox)
   if (!document.startViewTransition) {
-    document.querySelectorAll('.selected-work__link').forEach(link => {
+    document.querySelectorAll('a.selected-work__link').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const url = link.getAttribute('href');

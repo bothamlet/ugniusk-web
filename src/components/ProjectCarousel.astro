@@ -1,14 +1,12 @@
 ---
-import type { Project } from '../data/projects';
+import type { SelectedWorkCard } from '../data/projects';
 import ProjectCardVisual from './ProjectCardVisual.astro';
 
 interface Props {
-  projects: Project[];
+  cards: SelectedWorkCard[];
 }
 
-const { projects } = Astro.props;
-
-const selectedProjects = projects;
+const { cards } = Astro.props;
 ---
 
 <section id="work" class="selected-work" aria-labelledby="selected-work-title">
@@ -18,20 +16,31 @@ const selectedProjects = projects;
 
   <div class="selected-work__grid">
     {
-      selectedProjects.map((project) => (
-          <article class="selected-work__item">
-            <a class="selected-work__link cursor-hover" href={`/projects/${project.slug}/`}>
-              <ProjectCardVisual project={project} />
+      cards.map((card) => {
+        // A planned entry has no project page, so it renders as a plain div: no
+        // href, no focus stop, and no hover affordance on the card.
+        const Card = card.planned ? 'div' : 'a';
+        return (
+          <article class:list={["selected-work__item", card.planned && "selected-work__item--planned"]}>
+            <Card
+              class:list={["selected-work__link", !card.planned && "cursor-hover"]}
+              href={card.planned ? undefined : `/projects/${card.slug}/`}
+            >
+              <ProjectCardVisual project={card} />
               <span class="selected-work__meta">
-                <strong class="selected-work__name" data-scramble="scroll">{project.title}</strong>
+                <span class="selected-work__name-row">
+                  <strong class="selected-work__name" data-scramble="scroll">{card.title}</strong>
+                  {card.planned && <em class="selected-work__planned">Planned</em>}
+                </span>
                 <span class="selected-work__label-row">
-                  <span class="selected-work__descriptor">{project.label}</span>
-                  <span class="selected-work__year" data-scramble="scroll">{project.year}</span>
+                  <span class="selected-work__descriptor">{card.label}</span>
+                  <span class="selected-work__year" data-scramble="scroll">{card.year}</span>
                 </span>
               </span>
-            </a>
+            </Card>
           </article>
-      ))
+        );
+      })
     }
   </div>
 </section>
@@ -78,7 +87,9 @@ const selectedProjects = projects;
     transition: scale 500ms cubic-bezier(0.16, 0.8, 0.2, 1);
   }
 
-  .selected-work__item:hover {
+  /* Only linked cards react to hover. The planned card is inert, so it keeps
+     its size and its still image. */
+  .selected-work__item:not(.selected-work__item--planned):hover {
     scale: 0.97;
   }
 
@@ -109,12 +120,12 @@ const selectedProjects = projects;
     border-radius: 1rem;
   }
 
-  .selected-work__item:hover :global(.product-shot__ghost) {
+  .selected-work__item:not(.selected-work__item--planned):hover :global(.product-shot__ghost) {
     opacity: 1;
     transform: scale(1);
   }
 
-  .selected-work__item:hover :global(.product-shot__img) {
+  .selected-work__item:not(.selected-work__item--planned):hover :global(.product-shot__img) {
     opacity: 0.4;
   }
 
@@ -134,7 +145,15 @@ const selectedProjects = projects;
     padding-inline: 0.125rem;
   }
 
+  .selected-work__name-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    width: 100%;
+  }
+
   .selected-work__name {
+    min-width: 0;
     color: #030303;
     font-family: var(--font-display);
     font-size: clamp(1.5rem, 2.5vw, 2.25rem);
@@ -172,7 +191,18 @@ const selectedProjects = projects;
     line-height: 1.5;
   }
 
-  .selected-work__year {
+  /* The planned card's label is a short phrase that only needs a third line at
+     the narrowest width, so it keeps the shared type and drops the clamp: the
+     whole descriptor stays visible instead of being cut at two lines. */
+  .selected-work__item--planned .selected-work__descriptor {
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    overflow: visible;
+  }
+
+  .selected-work__year,
+  .selected-work__planned {
     flex-shrink: 0;
     /* Pushed to the end of the row, then inset from the card edge. */
     margin-left: auto;
@@ -185,9 +215,14 @@ const selectedProjects = projects;
     white-space: nowrap;
   }
 
+  .selected-work__planned {
+    font-style: italic;
+  }
+
   @media (min-width: 1200px) {
     .selected-work__descriptor,
-    .selected-work__year {
+    .selected-work__year,
+    .selected-work__planned {
       font-family: var(--font-mono-desktop);
       letter-spacing: normal;
     }

@@ -35,23 +35,12 @@ const technicalHeading = sectionByLabel('Technical')?.body;
           <span>All projects</span>
         </a>
 
-        <div class:list={["project-title-row", project.title.length > 15 && "project-title-row--long", project.repositoryUrl && "project-title-row--repo"]}>
-          <h1
-            class:list={["project-title", project.title.length > 15 && "project-title--long"]}
-            data-scramble="scroll"
-          >{project.title}</h1>{project.repositoryUrl && (
-            <a
-              class="project-repo cursor-hover"
-              href={project.repositoryUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={`View ${project.title} repository on GitHub`}
-              aria-label={`View ${project.title} repository on GitHub`}
-            >
-              <SocialIcon label="GitHub" size={18} />
-            </a>
-          )}
-        </div>
+        <h1
+          class:list={["project-title", project.title.length > 15 && "project-title--long"]}
+          data-scramble="scroll"
+        >
+          {project.title}
+        </h1>
       </div>
 
       <div class="project-first-view__right">
@@ -75,7 +64,20 @@ const technicalHeading = sectionByLabel('Technical')?.body;
       </div>
       <div class="project-meta-item">
         <span class="project-meta-item__label">Status</span>
-        <span class="project-meta-item__value" data-scramble="scroll">{project.status}</span>
+        <div class="project-meta-item__status">
+          <span class="project-meta-item__value" data-scramble="scroll">{project.status}</span>{project.repositoryUrl && (
+            <a
+              class="project-repo cursor-hover"
+              href={project.repositoryUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`View ${project.title} repository on GitHub`}
+              aria-label={`View ${project.title} repository on GitHub`}
+            >
+              <SocialIcon label="GitHub" size={18} />
+            </a>
+          )}
+        </div>
       </div>
     </div>
 
@@ -256,25 +258,8 @@ const technicalHeading = sectionByLabel('Technical')?.body;
   }
 
   /* ── Title ── */
-  /* The heading flows inline so the repository mark follows the final rendered
-     line of the title instead of being pushed to the column edge by a full-width
-     block box. The row keeps the title's trailing space; the mark adds an 8px
-     lead-in to its 44px target. */
-  .project-title-row {
-    margin-bottom: clamp(3.5rem, 7vw, 6.5rem);
-  }
-
-  /* The mark's 44px target is inline content, so reserve its width from the
-     title's measure. Without that strip a title that almost fills the column
-     wraps the mark onto a line of its own; the negative right margin below
-     lets the mark hang back into the reserved space. */
-  .project-title-row--repo {
-    padding-right: 3.25rem;
-  }
-
   .project-title {
-    display: inline;
-    margin: 0;
+    margin: 0 0 clamp(3.5rem, 7vw, 6.5rem);
     font-family: var(--font-display);
     font-size: clamp(3.5rem, 7vw, 7.5rem);
     font-weight: 900;
@@ -291,37 +276,10 @@ const technicalHeading = sectionByLabel('Technical')?.body;
      first two words on one line. */
   .project-title--long {
     font-size: clamp(2.75rem, 5vw, 4.75rem);
-  }
-
-  /* The header bottom-aligns the summary, so the title's trailing space sets
-     the row height and pushes the summary down with it. A two-line title
-     needs less of that than a one-line one. */
-  .project-title-row--long {
+    /* The header bottom-aligns the summary, so the title's trailing space sets
+       the row height and pushes the summary down with it. A two-line title
+       needs less of that than a one-line one. */
     margin-bottom: clamp(1.5rem, 3vw, 3rem);
-  }
-
-  .project-repo {
-    display: inline-flex;
-    /* Baseline alignment puts the mark on the title's last line, like a glyph. */
-    vertical-align: baseline;
-    align-items: center;
-    justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    margin-left: 0.5rem;
-    margin-right: -3.25rem;
-    color: #070707;
-    transition: color 200ms ease-out;
-  }
-
-  .project-repo:hover,
-  .project-repo:focus-visible {
-    color: var(--color-accent);
-  }
-
-  .project-repo:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
   }
 
   /* ── Details stacked below title ── */
@@ -408,6 +366,44 @@ const technicalHeading = sectionByLabel('Technical')?.body;
        single word cannot fit. */
     white-space: normal;
     overflow-wrap: anywhere;
+  }
+
+  /* The Status value and its repository mark share one row, so the mark sits
+     right after the word instead of at the far edge of the cell. The 4px gap is
+     what keeps it tight; the mark's own 44px target follows it. */
+  .project-meta-item__status {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .project-meta-item__status > .project-meta-item__value {
+    /* Flex items floor at min-width:auto; the status word wraps instead. */
+    min-width: 0;
+  }
+
+  .project-repo {
+    display: inline-flex;
+    /* Left-aligned inside its 44px touch target, so the mark itself hugs the
+       status word and only the invisible target extends to the right. */
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: flex-start;
+    width: 2.75rem;
+    height: 2.75rem;
+    color: #070707;
+    transition: color 200ms ease-out;
+  }
+
+  .project-repo:hover,
+  .project-repo:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .project-repo:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   /* ════════════════════════════════
@@ -574,7 +570,8 @@ const technicalHeading = sectionByLabel('Technical')?.body;
       margin-bottom: 1.5rem;
     }
 
-    .project-title-row {
+    .project-title,
+    .project-title--long {
       margin-bottom: 0;
     }
 

@@ -37,6 +37,19 @@ export interface Project {
 	}[];
 }
 
+/**
+ * A Selected Work card. Cards need far less than a full project page, so the
+ * card view of the shipped projects can sit beside a planned entry that has no
+ * page, screenshots, or editorial behind it.
+ */
+export type SelectedWorkCard = Pick<
+	Project,
+	"title" | "slug" | "year" | "label" | "image" | "cardImage" | "imageAlt"
+> & {
+	/** Shown as an italic note at the end of the name row; the card stays inert. */
+	planned?: boolean;
+};
+
 const allProjects: Project[] = [
 	{
 		code: "UG-006",
@@ -48,7 +61,7 @@ const allProjects: Project[] = [
 		label: "Personalised Daily Newspaper",
 		type: "Information Systems & Automation",
 		stack: ["Python", "SQLite", "Telegram Bot API"],
-		status: "Finished",
+		status: "Completed",
 		repositoryUrl: "https://github.com/bothamlet/todays-brief",
 		image: "/images/projects/todays-brief-card.webp",
 		imageAlt:
@@ -318,3 +331,20 @@ const allProjects: Project[] = [
 ];
 
 export const projects = allProjects.filter((project) => !project.hidden);
+
+// Horseflight is planned, not shipped, so it has no page or editorial: it closes
+// Selected Work as a card-only entry. Detail routes, the sitemap and More Works
+// read `projects`, which stays at the five shipped projects.
+export const selectedWork: SelectedWorkCard[] = [
+	...projects,
+	{
+		title: "Horseflight",
+		slug: "horseflight",
+		year: "2026",
+		label: "Occasionally Brilliant Chess Engine",
+		image: "/images/projects/horseflight-card.webp",
+		imageAlt:
+			"Horseflight - the cream knight mark above the Horseflight wordmark on a navy field",
+		planned: true,
+	},
+];

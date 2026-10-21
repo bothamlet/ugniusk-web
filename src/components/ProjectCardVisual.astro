@@ -1,8 +1,12 @@
 ---
-import type { Project } from '../data/projects';
+import type { SelectedWorkCard } from '../data/projects';
+
+// The card visual only reads these fields, so it accepts the planned card and the
+// shipped projects alike.
+type CardVisual = Pick<SelectedWorkCard, 'title' | 'cardImage' | 'image' | 'imageAlt'>;
 
 interface Props {
-  project: Project;
+  project: CardVisual;
 }
 
 const { project } = Astro.props;

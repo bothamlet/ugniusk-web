@@ -1,4 +1,5 @@
-import { test, expect, type Locator } from '@playwright/test';
+import { readFileSync, readdirSync } from 'node:fs';
+import { test, expect, type Page } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/_vercel/**', route => route.fulfill({ status: 204 }));
@@ -308,7 +309,7 @@ const repositories: Record<string, ProjectMeta> = {
     type: 'Information Systems & Automation',
     year: '2026',
     stack: 'Python · SQLite · Telegram Bot API',
-    status: 'Finished',
+    status: 'Completed',
     url: 'https://github.com/bothamlet/todays-brief',
   },
   'this-site': {
@@ -341,30 +342,38 @@ const repoLinkName = (title: string) => `View ${title} repository on GitHub`;
 
 interface Box { x: number; y: number; width: number; height: number }
 
-// The title flows inline, so its bounding box spans every line fragment. The
-// repository mark follows the final rendered line, so measure that line's text.
-const lastTextLine = (heading: Locator): Promise<Box> =>
-  heading.evaluate((element) => {
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    const rects = [...range.getClientRects()];
-    const last = rects.reduce((bottomMost, rect) =>
-      rect.bottom > bottomMost.bottom ? rect : bottomMost, rects[0]);
-    return { x: last.x, y: last.y, width: last.width, height: last.height };
-  });
+const statusCell = (page: Page) => page.locator('.project-meta-item').nth(3);
+
+// Adjacent-sibling selector: the mark must follow the scrambled status word
+// itself, which also proves it sits outside the span the scramble rewrites.
+const statusRepoLink = (page: Page) =>
+  statusCell(page).locator('.project-meta-item__status > [data-scramble="scroll"] + a.project-repo');
+
+const onSameLine = (a: Box, b: Box) => a.y < b.y + b.height && b.y < a.y + a.height;
 
 for (const [slug, project] of Object.entries(repositories)) {
-  test(`${slug}: the title row carries the repository link`, async ({ page }) => {
+  test(`${slug}: the Status value carries the repository link`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`/projects/${slug}/`);
 
-    const row = page.locator('.project-title-row');
-    await expect(row).toHaveCount(1);
-    const heading = row.locator('h1');
+    // The title is a plain block heading again: no row wrapper, no reserved
+    // gutter, and no mark beside the name.
+    const heading = page.locator('h1.project-title');
+    await expect(heading).toHaveCount(1);
     await expect(heading).toHaveText(project.title);
+    await expect(page.locator('.project-title-row')).toHaveCount(0);
+    await expect(page.locator('.project-title .project-repo, .project-title + .project-repo')).toHaveCount(0);
 
-    // Adjacent sibling selector: the link follows the h1 itself, not a wrapper.
-    const link = row.locator('h1 + .project-repo');
+    await expect(page.locator('.project-meta-item')).toHaveCount(4);
+    const status = statusCell(page);
+    await expect(status.locator('.project-meta-item__label')).toHaveText('Status');
+    const value = status.locator('.project-meta-item__value');
+    await expect(value).toHaveText(project.status);
+    expect(await value.getAttribute('data-scramble')).toBe('scroll');
+    // No mark inside the scrambled span.
+    await expect(status.locator('[data-scramble="scroll"] .project-repo')).toHaveCount(0);
+
+    const link = statusRepoLink(page);
     await expect(link).toHaveCount(1);
     await expect(link).toHaveAccessibleName(repoLinkName(project.title));
     await expect(link).toHaveAttribute('href', project.url);
@@ -379,42 +388,55 @@ for (const [slug, project] of Object.entries(repositories)) {
     expect(icon!.height).toBeGreaterThanOrEqual(18);
     expect(icon!.height).toBeLessThanOrEqual(19);
 
-    // The 44px target hugs the last word: 8px of margin to the target's edge.
-    const [lineBox, linkBox] = [await lastTextLine(heading), await link.boundingBox()];
+    // 44px target right after the status word, not at the far edge of the cell.
+    const [valueBox, linkBox] = [await value.boundingBox(), await link.boundingBox()];
     expect(linkBox!.width).toBeGreaterThanOrEqual(44);
     expect(linkBox!.height).toBeGreaterThanOrEqual(44);
-    const gap = linkBox!.x - (lineBox.x + lineBox.width);
+    const gap = linkBox!.x - (valueBox!.x + valueBox!.width);
     expect(gap).toBeGreaterThanOrEqual(0);
-    expect(gap).toBeLessThanOrEqual(12);
-    const sharesLastLine =
-      linkBox!.y < lineBox.y + lineBox.height && lineBox.y < linkBox!.y + linkBox!.height;
-    expect(sharesLastLine, 'mark stays on the last title line').toBe(true);
-
-    // The fourth field is still Status: four meta items, same value, no link.
-    await expect(page.locator('.project-meta-item')).toHaveCount(4);
-    const status = page.locator('.project-meta-item').nth(3);
-    await expect(status.locator('.project-meta-item__label')).toHaveText('Status');
-    await expect(status.locator('.project-meta-item__value')).toHaveText(project.status);
-    await expect(status.getByRole('link')).toHaveCount(0);
-
-    // The server-rendered HTML carries the link in the header, not the meta row.
-    const html = await (await page.request.get(`/projects/${slug}/`)).text();
-    const rowStart = html.indexOf('class="project-title-row');
-    const linkStart = html.indexOf('class="project-repo cursor-hover"');
-    const metaStart = html.indexOf('class="project-meta-row"');
-    expect(rowStart).toBeGreaterThan(-1);
-    expect(linkStart).toBeGreaterThan(rowStart);
-    expect(linkStart).toBeLessThan(metaStart);
-    expect(html).toMatch(/<\/h1><a class="project-repo cursor-hover"/);
-    expect(html).toContain(`href="${project.url}"`);
+    expect(gap).toBeLessThanOrEqual(8);
+    expect(onSameLine(valueBox!, linkBox!), 'mark shares the status line').toBe(true);
   });
 }
+
+// The built pages and stylesheet are the shipped artefact, so the markup and
+// CSS assertions read them directly: the dev server rewrites component styles at
+// runtime, which makes its raw response a poor witness for a removed rule.
+test('built project pages carry the Status mark and no title-row remnants', () => {
+  const cssDir = new URL('../dist/_astro/', import.meta.url);
+  const css = readdirSync(cssDir)
+    .filter((file) => file.endsWith('.css'))
+    .map((file) => readFileSync(new URL(file, cssDir), 'utf8'))
+    .join('\n');
+  expect(css).not.toContain('project-title-row');
+  expect(css).not.toContain('project-meta-item--repo');
+  expect(css).toContain('.project-meta-item__status');
+  expect(css).toMatch(/project-visual-full--inset[^{]*\{background:#fdfbf7/);
+
+  for (const [slug, project] of Object.entries(repositories)) {
+    const html = readFileSync(new URL(`../dist/projects/${slug}/index.html`, import.meta.url), 'utf8');
+    // The standalone heading is back, and the mark lives after the Status word.
+    expect(html).toMatch(/<h1 class="project-title[^"]*"/);
+    expect(html).not.toContain('project-title-row');
+    const statusStart = html.indexOf('>Status</span>');
+    const linkStart = html.indexOf('class="project-repo cursor-hover"');
+    expect(statusStart, slug).toBeGreaterThan(-1);
+    expect(linkStart, slug).toBeGreaterThan(statusStart);
+    expect(html, slug).toMatch(/<\/span><a class="project-repo cursor-hover"/);
+    expect(html, slug).toContain(`href="${project.url}"`);
+  }
+
+  const surface = readFileSync(new URL('../dist/projects/surface-runoff/index.html', import.meta.url), 'utf8');
+  expect(surface).not.toContain('class="project-repo');
+  expect(surface).not.toContain('project-meta-item--repo');
+  expect(surface).not.toContain('project-title-row');
+});
 
 test('repository link is keyboard reachable with a visible focus ring', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/projects/jukdata/');
-  // The back link is the last tab stop before the title row, so one Tab lands
-  // on the repository link.
+  // The back link is the last tab stop before the meta row, so one Tab lands on
+  // the repository link in the Status cell.
   await page.locator('.project-back').focus();
   await page.keyboard.press('Tab');
   const link = page.locator('.project-repo');
@@ -425,24 +447,26 @@ test('repository link is keyboard reachable with a visible focus ring', async ({
 });
 
 for (const width of [320, 390, 430, 600, 900, 901, 1000, 1440]) {
-  test(`repository link stays beside the title without clipping at ${width}px`, async ({ page }) => {
+  test(`repository link stays beside the Status value without clipping at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     for (const [slug, project] of Object.entries(repositories)) {
       await page.goto(`/projects/${slug}/`);
       await page.evaluate(() => document.fonts.ready);
-      const row = page.locator('.project-title-row');
-      const heading = row.locator('h1');
-      const link = row.getByRole('link', { name: repoLinkName(project.title) });
-      const [cardBox, rowBox, lineBox, linkBox, iconBox] = [
+      const where = `${slug} at ${width}px`;
+      const status = statusCell(page);
+      const value = status.locator('.project-meta-item__value');
+      const link = statusRepoLink(page);
+      const [cardBox, statusBox, valueBox, linkBox, iconBox] = [
         (await page.locator('.project-detail').boundingBox())!,
-        (await row.boundingBox())!,
-        await lastTextLine(heading),
+        (await status.boundingBox())!,
+        (await value.boundingBox())!,
         (await link.boundingBox())!,
         (await link.locator('svg').boundingBox())!,
       ];
-      const where = `${slug} at ${width}px`;
 
-      await expect(heading, where).toHaveText(project.title);
+      await expect(page.locator('h1.project-title'), where).toHaveText(project.title);
+      await expect(page.locator('.project-title-row'), where).toHaveCount(0);
+      await expect(page.locator('.project-title .project-repo'), where).toHaveCount(0);
 
       // 44px touch target around an 18px mark.
       expect(linkBox.width, where).toBeGreaterThanOrEqual(44);
@@ -452,29 +476,40 @@ for (const width of [320, 390, 430, 600, 900, 901, 1000, 1440]) {
       expect(iconBox.height, where).toBeGreaterThanOrEqual(18);
       expect(iconBox.height, where).toBeLessThanOrEqual(19);
 
-      // Immediately right of the last rendered title word, never floated to the
-      // column edge and never pushed onto a line of its own.
-      expect(linkBox.x - (lineBox.x + lineBox.width), where).toBeGreaterThanOrEqual(0);
-      expect(linkBox.x - (lineBox.x + lineBox.width), where).toBeLessThanOrEqual(12);
-      const sharesLastLine =
-        linkBox.y < lineBox.y + lineBox.height && lineBox.y < linkBox.y + linkBox.height;
-      expect(sharesLastLine, `${where} mark shares the last title line`).toBe(true);
+      // Immediately after the status word: the gap is the row's own spacing,
+      // never the distance across the cell to a right-aligned mark.
+      const gap = linkBox.x - (valueBox.x + valueBox.width);
+      expect(gap, where).toBeGreaterThanOrEqual(0);
+      expect(gap, where).toBeLessThanOrEqual(8);
+      expect(onSameLine(valueBox, linkBox), `${where} mark shares the status line`).toBe(true);
 
-      // Inside the viewport and the card. `.project-page` clips overflow-x, so
-      // document.scrollWidth stays pinned to the viewport even when a box hangs
-      // off the edge; only the boxes show that.
+      // The status word stays whole - no wrap, no ellipsis.
+      await expect(value, where).toHaveText(project.status);
+      const valueOverflow = await value.evaluate((element) => {
+        const css = getComputedStyle(element);
+        return {
+          scrollWidth: element.scrollWidth,
+          clientWidth: element.clientWidth,
+          scrollHeight: element.scrollHeight,
+          clientHeight: element.clientHeight,
+          whiteSpace: css.whiteSpace,
+          textOverflow: css.textOverflow,
+        };
+      });
+      expect(valueOverflow.whiteSpace, where).toBe('normal');
+      expect(valueOverflow.textOverflow, where).not.toBe('ellipsis');
+      expect(valueOverflow.scrollWidth, where).toBeLessThanOrEqual(valueOverflow.clientWidth + 1);
+      expect(valueOverflow.scrollHeight, where).toBeLessThanOrEqual(valueOverflow.clientHeight + 1);
+
+      // Inside the viewport, the card and the Status cell at once.
       expect(linkBox.x, where).toBeGreaterThanOrEqual(0);
       expect(linkBox.x + linkBox.width, where).toBeLessThanOrEqual(width);
-      expect(rowBox.x, where).toBeGreaterThanOrEqual(cardBox.x);
-      expect(rowBox.x + rowBox.width, where).toBeLessThanOrEqual(cardBox.x + cardBox.width + 1);
-      expect(linkBox.x, where).toBeGreaterThanOrEqual(rowBox.x);
-      expect(linkBox.x + linkBox.width, where).toBeLessThanOrEqual(rowBox.x + rowBox.width + 1);
-      expect(linkBox.y, where).toBeGreaterThanOrEqual(rowBox.y);
-      expect(linkBox.y + linkBox.height, where).toBeLessThanOrEqual(rowBox.y + rowBox.height + 1);
-
-      // The title text itself stays inside the card, unclipped.
-      expect(lineBox.x, where).toBeGreaterThanOrEqual(cardBox.x);
-      expect(lineBox.x + lineBox.width, where).toBeLessThanOrEqual(cardBox.x + cardBox.width);
+      expect(statusBox.x, where).toBeGreaterThanOrEqual(cardBox.x);
+      expect(statusBox.x + statusBox.width, where).toBeLessThanOrEqual(cardBox.x + cardBox.width + 1);
+      expect(linkBox.x, where).toBeGreaterThanOrEqual(statusBox.x);
+      expect(linkBox.x + linkBox.width, where).toBeLessThanOrEqual(statusBox.x + statusBox.width + 1);
+      expect(linkBox.y, where).toBeGreaterThanOrEqual(statusBox.y);
+      expect(linkBox.y + linkBox.height, where).toBeLessThanOrEqual(statusBox.y + statusBox.height + 1);
     }
   });
 }
@@ -522,25 +557,220 @@ for (const width of [901, 1000, 1440]) {
   });
 }
 
-test('Surface Runoff leaves the title row and Status cell without a repository link', async ({ page }) => {
+test('Surface Runoff leaves the Status cell without a repository link', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/projects/surface-runoff/');
-  const row = page.locator('.project-title-row');
-  await expect(row.locator('h1')).toHaveText('Surface Runoff Model');
-  // With no URL the row holds only the heading, so it gains no gap or width.
-  await expect(row.locator(':scope > *')).toHaveCount(1);
+  await expect(page.locator('h1.project-title')).toHaveText('Surface Runoff Model');
+  await expect(page.locator('.project-title-row')).toHaveCount(0);
   await expect(page.locator('.project-repo')).toHaveCount(0);
-  const status = page.locator('.project-meta-item').nth(3);
   await expect(page.locator('.project-meta-item')).toHaveCount(4);
+  const status = statusCell(page);
   await expect(status.getByRole('link')).toHaveCount(0);
   await expect(status.locator('.project-meta-item__value')).toHaveText('Completed');
-  // The Status cell keeps its plain box: no reserved gutter.
+  // The status row holds the word alone: no reserved target, no leftover gap.
+  await expect(status.locator('.project-meta-item__status > *')).toHaveCount(1);
   const style = await status.evaluate((element) => {
     const css = getComputedStyle(element);
     return { position: css.position, paddingRight: css.paddingRight };
   });
   expect(style).toEqual({ position: 'static', paddingRight: '0px' });
-  const html = await (await page.request.get('/projects/surface-runoff/')).text();
-  expect(html).not.toContain('class="project-repo');
-  expect(html).not.toContain('project-meta-item--repo');
+});
+
+test('statuses use the terminal vocabulary without rewriting narrative copy', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const terminalStatuses = ['Active', 'Paused', 'Completed'];
+  const expected: Record<string, string> = {
+    'todays-brief': 'Completed',
+    'this-site': 'Active',
+    chap: 'Paused',
+    jukdata: 'Completed',
+    'surface-runoff': 'Completed',
+  };
+  for (const [slug, status] of Object.entries(expected)) {
+    await page.goto(`/projects/${slug}/`);
+    const value = page.locator('.project-meta-item__value').nth(3);
+    await expect(value, slug).toHaveText(status);
+    expect(terminalStatuses, slug).toContain(await value.textContent());
+  }
+  // The narrative keeps its own wording: only the Status field was normalised.
+  await page.goto('/projects/jukdata/');
+  await expect(page.locator('.project-page')).toContainText('Complete product');
+});
+
+test("Today's Brief inset visual fills its side gutters with the screenshot's paper tone", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/projects/todays-brief/');
+  await page.evaluate(() => document.fonts.ready);
+  const band = page.locator('.project-visual-full--inset');
+  await expect(band).toHaveCount(1);
+  // #fdfbf7 is the median colour of the screenshot's paper edge.
+  await expect(band).toHaveCSS('background-color', 'rgb(253, 251, 247)');
+
+  const [bandBox, imageBox] = [(await band.boundingBox())!, (await band.locator('img').boundingBox())!];
+  // The image keeps its inset geometry; only the exposed gutters changed tone.
+  expect(imageBox.width).toBeCloseTo(Math.min(bandBox.width * 0.8, 64 * 16), 0);
+  expect(imageBox.x - bandBox.x).toBeGreaterThan(0);
+  expect(bandBox.x + bandBox.width - (imageBox.x + imageBox.width)).toBeGreaterThan(0);
+
+  // The tint is scoped to the inset variant only.
+  const otherVisuals = page.locator('.project-visual-full:not(.project-visual-full--inset)');
+  await expect(otherVisuals).toHaveCount(2);
+  for (const visual of await otherVisuals.all()) {
+    await expect(visual).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  }
+  await page.goto('/projects/surface-runoff/');
+  await expect(page.locator('.project-visual-full--inset')).toHaveCount(0);
+  await expect(page.locator('.project-visual-full').nth(1)).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+});
+
+const horseflight = {
+  title: 'Horseflight',
+  label: 'Occasionally Brilliant Chess Engine',
+  year: '2026',
+  image: '/images/projects/horseflight-card.webp',
+  variants: [
+    '/images/projects/horseflight-card-800.webp',
+    '/images/projects/horseflight-card-1600.webp',
+  ],
+};
+
+for (const width of [320, 390, 1440]) {
+  test(`Horseflight closes Selected Work as an inert sixth card at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    await page.evaluate(() => document.fonts.ready);
+
+    const cards = page.locator('.selected-work__item');
+    await expect(cards).toHaveCount(6);
+    await expect(page.locator('a.selected-work__link')).toHaveCount(5);
+    const card = cards.nth(5);
+    await expect(card).toHaveClass(/selected-work__item--planned/);
+    // It closes the list, after the last shipped project.
+    await expect(cards.nth(4).locator('.selected-work__name')).toHaveText('Surface Runoff Model');
+
+    // Non-interactive: a div wrapper with no href, role, tab stop or link.
+    const wrapper = card.locator('.selected-work__link');
+    expect(await wrapper.evaluate((element) => element.tagName)).toBe('DIV');
+    expect(await wrapper.getAttribute('href')).toBeNull();
+    expect(await wrapper.getAttribute('role')).toBeNull();
+    expect(await wrapper.getAttribute('tabindex')).toBeNull();
+    await expect(card.locator('a')).toHaveCount(0);
+    await expect(card.getByRole('link')).toHaveCount(0);
+    expect(await wrapper.evaluate((element) => getComputedStyle(element).cursor)).toBe('auto');
+
+    // Exact card copy.
+    const name = card.locator('.selected-work__name');
+    const descriptor = card.locator('.selected-work__descriptor');
+    const year = card.locator('.selected-work__year');
+    await expect(name).toHaveText(horseflight.title);
+    await expect(descriptor).toHaveText(horseflight.label);
+    await expect(year).toHaveText(horseflight.year);
+
+    // 'Planned' is italic, after the name, and right-aligned with the year below.
+    const planned = card.locator('.selected-work__planned');
+    await expect(planned).toHaveText('Planned');
+    expect(await planned.evaluate((element) => getComputedStyle(element).fontStyle)).toBe('italic');
+    const [nameBox, plannedBox, yearBox, cardBox] = [
+      (await name.boundingBox())!,
+      (await planned.boundingBox())!,
+      (await year.boundingBox())!,
+      (await card.boundingBox())!,
+    ];
+    expect(plannedBox.x).toBeGreaterThan(nameBox.x + nameBox.width);
+    expect(plannedBox.y).toBeGreaterThanOrEqual(nameBox.y - 1);
+    expect(plannedBox.y + plannedBox.height).toBeLessThanOrEqual(nameBox.y + nameBox.height + 1);
+    expect(Math.abs(plannedBox.x + plannedBox.width - (yearBox.x + yearBox.width))).toBeLessThanOrEqual(1);
+    expect(plannedBox.x + plannedBox.width).toBeLessThanOrEqual(cardBox.x + cardBox.width);
+    expect(plannedBox.x).toBeGreaterThanOrEqual(cardBox.x);
+
+    // The name keeps its card size at every width. The planned card is exempt
+    // from the shared two-line clamp, so its full descriptor is visible - no
+    // vertical overflow at any width - while the five shipped cards keep it.
+    const nameSize = await name.evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+    expect(nameSize).toBeGreaterThanOrEqual(24);
+    const descriptorBox = await descriptor.evaluate((element) => ({
+      text: element.textContent,
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+      lineClamp: getComputedStyle(element).webkitLineClamp,
+    }));
+    expect(descriptorBox.text).toBe(horseflight.label);
+    expect(descriptorBox.lineClamp).toBe('none');
+    expect(descriptorBox.scrollHeight).toBeLessThanOrEqual(descriptorBox.clientHeight + 1);
+    expect(descriptorBox.scrollWidth).toBeLessThanOrEqual(descriptorBox.clientWidth + 1);
+
+    const shipped = page.locator('.selected-work__item:not(.selected-work__item--planned) .selected-work__descriptor');
+    await expect(shipped).toHaveCount(5);
+    const shippedClamps = await shipped.evaluateAll(elements =>
+      elements.map(element => getComputedStyle(element).webkitLineClamp));
+    for (const lineClamp of shippedClamps) {
+      expect(lineClamp).toBe('2');
+    }
+
+    // The generated card image and both srcset variants are wired and load.
+    const image = card.locator('.product-shot__img');
+    await expect(image).toHaveAttribute('src', horseflight.image);
+    const srcset = (await image.getAttribute('srcset')) ?? '';
+    expect(srcset).toContain('/images/projects/horseflight-card-800.webp 800w');
+    expect(srcset).toContain('/images/projects/horseflight-card-1600.webp 1600w');
+    await image.scrollIntoViewIfNeeded();
+    await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(0);
+  });
+}
+
+test('the planned card stays still while the shipped cards keep their hover affordance', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/');
+  const cards = page.locator('.selected-work__item');
+  const plannedCard = cards.nth(5);
+  await plannedCard.scrollIntoViewIfNeeded();
+  await plannedCard.hover();
+  expect(await plannedCard.evaluate((element) => getComputedStyle(element).scale)).toBe('none');
+  await expect(plannedCard.locator('.product-shot__ghost')).toHaveCSS('opacity', '0');
+  await expect(plannedCard.locator('.product-shot__img')).toHaveCSS('opacity', '1');
+
+  // Clicking the inert card never navigates.
+  const before = page.url();
+  await plannedCard.locator('.product-shot').click();
+  await page.waitForTimeout(500);
+  expect(page.url()).toBe(before);
+
+  // The first five are still links, and still react to hover.
+  const first = cards.nth(0);
+  expect(await first.locator('.selected-work__link').evaluate((element) => element.tagName)).toBe('A');
+  await expect(first.locator('.selected-work__link')).toHaveAttribute('href', '/projects/todays-brief/');
+  await first.scrollIntoViewIfNeeded();
+  await first.hover();
+  await expect.poll(() => first.evaluate((element) => getComputedStyle(element).scale)).not.toBe('none');
+});
+
+test('Horseflight serves its card assets and stays out of routes, the sitemap and More Works', async ({ page }) => {
+  for (const url of [horseflight.image, ...horseflight.variants]) {
+    expect((await page.request.get(url)).status(), url).toBe(200);
+  }
+
+  // No detail page was generated for the planned card.
+  expect((await page.request.get('/projects/horseflight/')).status()).toBe(404);
+
+  // The built sitemap lists the five shipped projects and nothing for Horseflight.
+  const sitemap = readFileSync(new URL('../dist/sitemap-0.xml', import.meta.url), 'utf8');
+  expect(sitemap).toContain('/projects/todays-brief/');
+  expect(sitemap).toContain('/projects/surface-runoff/');
+  expect(sitemap).not.toMatch(/horseflight/i);
+
+  // The homepage carries the card copy but never a link to a Horseflight route.
+  const home = await (await page.request.get('/')).text();
+  expect(home).toContain('Horseflight');
+  expect(home).not.toContain('href="/projects/horseflight');
+  expect(home).toContain('class="selected-work__item selected-work__item--planned"');
+
+  // More Works still draws from the shipped projects only.
+  await page.goto('/projects/chap/');
+  const moreWorks = page.locator('.project-more__name');
+  await expect(moreWorks).toHaveCount(2);
+  for (const more of await moreWorks.all()) {
+    expect((await more.textContent())?.toLowerCase()).not.toContain('horseflight');
+  }
 });
