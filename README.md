@@ -24,6 +24,7 @@ Portfolio and journal of Ugnius Liberman. Static Astro build, no client-side fra
 | `npm run check` | Astro and TypeScript diagnostics |
 | `npm run preview` | Serve the built `dist/` locally |
 | `npm run test:mobile` | Playwright suite - builds, serves its own preview on `http://127.0.0.1:4323` and runs the Chromium tests |
+| `node --test tests/security-headers.node.mjs` | Verify the scoped CORP exception for public OG images |
 | `npm run images:variants` | Write the missing responsive WebP derivatives |
 
 Node 22.12 or newer. The suite also needs Playwright's Chromium: `npx playwright install chromium`. The
@@ -44,7 +45,7 @@ src/
 ├─ scripts/       client-side motion: scroll, cursor, scramble, nav
 └─ styles/        global.css - design tokens and shared rules
 scripts/          generate-image-variants.mjs - writes the responsive WebP derivatives
-tests/            mobile.spec.ts - the Playwright suite
+tests/            mobile.spec.ts - the Playwright suite; security-headers.node.mjs - CORP regression test
 ```
 
 ## Content
