@@ -8,7 +8,7 @@ Portfolio and journal of Ugnius Liberman. Static Astro build, no client-side fra
 
 | | |
 | --- | --- |
-| Framework | Astro 6, static output |
+| Framework | Astro 7, static output |
 | Styling | Hand-written CSS with custom properties |
 | Motion | Lenis for scroll, Anime.js for reveals, custom cursor and text scramble in TypeScript |
 | Type | Archivo Black display and Georgia reading; Courier New for small mono, with self-hosted IBM Plex Mono from 1200px up on desktop labels. Archivo Black and IBM Plex Mono ship from `public/fonts/` |
@@ -27,7 +27,7 @@ Portfolio and journal of Ugnius Liberman. Static Astro build, no client-side fra
 | `node --test tests/security-headers.node.mjs` | Verify the scoped CORP exception for public OG images |
 | `npm run images:variants` | Write the missing responsive WebP derivatives |
 
-Node 22.12 or newer. The suite also needs Playwright's Chromium: `npx playwright install chromium`. The
+Node 24.x LTS, at least 24.15.0. The suite also needs Playwright's Chromium: `npx playwright install chromium`. The
 suite runs it through `channel: 'chromium'`, Playwright's full-Chromium new-headless mode rather than the
 separate headless shell, which the same install provides.
 It builds the site and serves a fresh preview on its own port, so it never attaches to the dev

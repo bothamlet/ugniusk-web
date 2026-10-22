@@ -1706,3 +1706,44 @@ test('the native view-transition path is left alone', async ({ page }) => {
 
   expect(outcome).toEqual({ prevented: false, position: '' });
 });
+
+test('the navigation keeps its blurred glass on mobile and coarse pointers only', async ({ page, browser }) => {
+  const blurOf = (target: Page) => target.locator('.site-nav').evaluate(nav => getComputedStyle(nav).backdropFilter);
+
+  // A narrow window blurs even with a fine pointer: the width rule stands alone.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  expect(await blurOf(page)).toBe('blur(8px)');
+
+  // A fine-pointer desktop keeps the plain, unblurred navigation.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  expect(await blurOf(page)).toBe('none');
+
+  // Touch devices blur at both widths, including above the 900px width rule.
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+    const context = await browser.newContext({ viewport, hasTouch: true, isMobile: true });
+    try {
+      const touch = await context.newPage();
+      await touch.route('**/_vercel/**', route => route.fulfill({ status: 204 }));
+      await touch.goto('/');
+      expect(await blurOf(touch), `coarse pointer at ${viewport.width}px`).toBe('blur(8px)');
+    } finally {
+      await context.close();
+    }
+  }
+
+  // Older Safari only understands the prefixed property while Chromium, Firefox
+  // and current Safari use the standard one, so both declarations have to reach
+  // the browser; the media queries must also stay in the legacy width form that
+  // Safari 16.0-16.3 can parse rather than Level 4 range syntax.
+  const css = await page.evaluate(async () => {
+    const hrefs = [...document.querySelectorAll('link[rel="stylesheet"]')].map(link => (link as HTMLLinkElement).href);
+    const sheets = await Promise.all(hrefs.map(href => fetch(href).then(response => response.text())));
+    return sheets.join('\n');
+  });
+  expect(css).toMatch(/@media[^{]*\(max-width:\s*900px\)/);
+  expect(css).not.toMatch(/\(width\s*<=/);
+  expect(css).not.toMatch(/\(width\s*>=/);
+  expect(css).toMatch(/[;{]backdrop-filter:\s*blur\(8px\)/);
+  expect(css).toMatch(/[;{]-webkit-backdrop-filter:\s*blur\(8px\)/);
+});

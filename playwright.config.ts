@@ -20,7 +20,12 @@ export default defineConfig({
     channel: 'chromium',
   },
   webServer: {
-    command: `npm run build && npm run preview -- --host 127.0.0.1 --port ${port}`,
+    // `--ignore-lock` is Astro 7's supported one-off mode: it starts a plain
+    // foreground preview instead of detaching into the background daemon that
+    // `astro preview` otherwise uses when it detects an agent environment. It
+    // also opts out of the preview lock file, so it never tracks, reuses or
+    // stops another preview server - this suite still owns its own port.
+    command: `npm run build && npm run preview -- --host 127.0.0.1 --port ${port} --ignore-lock`,
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: false,
     env: { ASTRO_TELEMETRY_DISABLED: '1' },

@@ -102,7 +102,6 @@
       mix-blend-mode: normal;
       background: rgba(3, 3, 3, 0.94);
       backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
     }
 
     .site-nav__brand {
@@ -148,7 +147,18 @@
       mix-blend-mode: normal;
       background: rgba(3, 3, 3, 0.85);
       backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+    }
+  }
+
+  /* Older Safari only understands the prefixed property, while current Safari
+     supports the standard one as well. Keep the fallback in its own feature
+     query: inside one rule the CSS minifier collapses the alias pair and drops
+     the standard declaration that Chromium and Firefox use. */
+  @supports (-webkit-backdrop-filter: blur(8px)) {
+    @media (max-width: 900px), (pointer: coarse) {
+      .site-nav {
+        -webkit-backdrop-filter: blur(8px);
+      }
     }
   }
 </style>

@@ -5,8 +5,9 @@
 //
 // Each `-<width>.webp` sits beside its source and is a plain resize at quality
 // 85, never wider than the source itself. The originals are only read: they
-// stay byte-identical and remain the `src`/open-original target. Sharp is the
-// image library Astro already installs; this script adds no dependency.
+// stay byte-identical and remain the `src`/open-original target. Sharp is a
+// devDependency because this script imports it directly; Astro lists it only
+// as an optional dependency, so it is not reliably installed alongside Astro.
 
 import { readFileSync, statSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
