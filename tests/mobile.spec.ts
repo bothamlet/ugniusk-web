@@ -709,13 +709,26 @@ for (const width of [320, 390, 430, 600, 900, 901, 1000, 1440]) {
       const status = statusCell(page);
       const value = status.locator('.project-meta-item__value');
       const link = statusRepoLink(page);
-      const [cardBox, statusBox, valueBox, linkBox, iconBox] = [
-        (await page.locator('.project-detail').boundingBox())!,
-        (await status.boundingBox())!,
-        (await value.boundingBox())!,
-        (await link.boundingBox())!,
-        (await link.locator('svg').boundingBox())!,
+      // The reveal and nav-height corrections can still hold the meta row below
+      // its settled position right after fonts resolve. Resolve the five
+      // elements, then read every rect in one synchronous evaluation so the
+      // assertions below compare a single layout state.
+      const elements = [
+        await page.locator('.project-detail').elementHandle(),
+        await status.elementHandle(),
+        await value.elementHandle(),
+        await link.elementHandle(),
+        await link.locator('svg').elementHandle(),
       ];
+      const [cardBox, statusBox, valueBox, linkBox, iconBox] = await page.evaluate(
+        (handles) =>
+          handles.map((element) => {
+            if (!element) throw new Error('geometry element is missing');
+            const { x, y, width, height } = element.getBoundingClientRect();
+            return { x, y, width, height };
+          }),
+        elements,
+      );
 
       await expect(page.locator('h1.project-title'), where).toHaveText(project.title);
       await expect(page.locator('.project-title-row'), where).toHaveCount(0);
