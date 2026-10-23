@@ -1144,6 +1144,11 @@ test('Selected Work subtext and year step down to 95% with a tighter row gap', a
   const cases = [
     // Below the desktop breakpoint the descriptor sits on its 0.97375rem floor.
     { width: 320, name: 24, descriptor: 15.58 },
+    { width: 390, name: 24, descriptor: 15.58 },
+    // Tablet keeps the label-row tracking band but the descriptor carries its
+    // own negative tracking, so the new value must win over the inherited one.
+    { width: 900, name: 24, descriptor: 15.58 },
+    { width: 1199, name: 29.975, descriptor: 15.58 },
     { width: 1440, name: 36, descriptor: 15.58 },
     // 1822-2000px is the only band where the desktop clamp takes its 0.855vw
     // middle term: 95% of the former 0.9vw middle at the same viewport.
@@ -1172,6 +1177,8 @@ test('Selected Work subtext and year step down to 95% with a tighter row gap', a
           year: size('.selected-work__year'),
           planned: size('.selected-work__planned'),
           rowGap: parseFloat(getComputedStyle(meta).rowGap),
+          labelRowMarginTop: parseFloat(getComputedStyle(item.querySelector('.selected-work__label-row')!).marginTop),
+          descriptorLetterSpacing: getComputedStyle(label).letterSpacing,
           labelOverflow: {
             scrollWidth: label.scrollWidth,
             clientWidth: label.clientWidth,
@@ -1194,6 +1201,11 @@ test('Selected Work subtext and year step down to 95% with a tighter row gap', a
       }
       // The label and year rows close up against the name row.
       expect(card.rowGap, `${card.title} row gap ${where}`).toBeCloseTo(1.6, 2);
+      // The row sits 2px higher, and the description tightens its own tracking
+      // (rather than inheriting the wider label-row value at tablet widths).
+      expect(card.labelRowMarginTop, `${card.title} label row margin ${where}`).toBeCloseTo(5.2, 2);
+      expect(parseFloat(card.descriptorLetterSpacing), `${card.title} descriptor tracking ${where}`)
+        .toBeCloseTo(card.descriptor! * -0.025, 2);
       // The planned descriptors are the longest strings on the cards and carry
       // no clamp: at every width the smaller type still shows all of the copy.
       if (card.planned !== null) {
