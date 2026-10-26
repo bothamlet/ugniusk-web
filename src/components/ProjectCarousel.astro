@@ -219,11 +219,11 @@ const { cards } = Astro.props;
 
   .selected-work__planned {
     /* The row is baseline-aligned for the title; the mono tag would hang below
-       the display-size name, so it centres on the name instead. The 2px lift
+       the display-size name, so it centres on the name instead. The 4px lift
        is optical: a mathematically centred small tag reads slightly low beside
        the display-size name. */
     align-self: center;
-    transform: translateY(-2px);
+    transform: translateY(-4px);
     font-style: italic;
     /* The site turns synthesis off globally and IBM Plex Mono ships regular
        only, so the desktop label would compute italic but draw upright: let

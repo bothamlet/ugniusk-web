@@ -366,7 +366,7 @@ export const selectedWork: SelectedWorkCard[] = [
 		title: "Horseflight",
 		slug: "horseflight",
 		year: "2026",
-		label: "Occasionally Brilliant Chess Engine",
+		label: "Chess Engine",
 		image: "/images/projects/horseflight-card.webp",
 		imageAlt:
 			"Horseflight - the cream knight mark above the Horseflight wordmark on a navy field",

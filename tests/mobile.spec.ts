@@ -1028,7 +1028,7 @@ const plannedCards = [
   },
   {
     title: 'Horseflight',
-    label: 'Occasionally Brilliant Chess Engine',
+    label: 'Chess Engine',
     year: '2026',
     image: '/images/projects/horseflight-card.webp',
     variants: [
@@ -1072,10 +1072,11 @@ const assertPlannedCard = async (card: Locator, plannedCard: (typeof plannedCard
     (await card.boundingBox())!,
   ];
   expect(plannedBox.x).toBeGreaterThan(nameBox.x + nameBox.width);
-  // The shared 2px optical lift sits the label just above the name's centre.
+  // The shared 4px optical lift sits the label just above the name's centre.
+  expect(await planned.evaluate((element) => getComputedStyle(element).transform)).toBe('matrix(1, 0, 0, 1, 0, -4)');
   const centerOffset = plannedBox.y + plannedBox.height / 2 - (nameBox.y + nameBox.height / 2);
-  expect(centerOffset).toBeGreaterThanOrEqual(-3);
-  expect(centerOffset).toBeLessThanOrEqual(-1);
+  expect(centerOffset).toBeGreaterThanOrEqual(-5);
+  expect(centerOffset).toBeLessThanOrEqual(-3);
   expect(plannedBox.y).toBeGreaterThanOrEqual(nameBox.y - 3);
   expect(plannedBox.y + plannedBox.height).toBeLessThanOrEqual(nameBox.y + nameBox.height + 1);
   expect(Math.abs(plannedBox.x + plannedBox.width - (yearBox.x + yearBox.width))).toBeLessThanOrEqual(1);
