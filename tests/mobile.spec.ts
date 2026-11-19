@@ -404,7 +404,7 @@ const repositories: Record<string, ProjectMeta> = {
     year: '2026',
     stack: 'Python · SQLite · Telegram Bot API',
     status: 'Completed',
-    url: 'https://github.com/bothamlet/todays-brief',
+    url: 'https://github.com/bothamlet/todays-brief-stable',
   },
   'this-site': {
     title: 'This Site',
@@ -420,7 +420,7 @@ const repositories: Record<string, ProjectMeta> = {
     year: '2026',
     stack: 'Kotlin · Jetpack Compose · Room · SQLCipher',
     status: 'Paused',
-    url: 'https://github.com/bothamlet/chap-android',
+    url: 'https://github.com/bothamlet/chap-stable',
   },
   jukdata: {
     title: 'JUKdata',
@@ -428,7 +428,7 @@ const repositories: Record<string, ProjectMeta> = {
     year: '2026',
     stack: 'Next.js · React · TypeScript · Tailwind CSS',
     status: 'Completed',
-    url: 'https://github.com/bothamlet/jukdata-site',
+    url: 'https://github.com/bothamlet/jukdata-stable',
   },
 };
 

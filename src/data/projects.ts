@@ -61,7 +61,7 @@ const allProjects: Project[] = [
 		type: "Information Systems & Automation",
 		stack: ["Python", "SQLite", "Telegram Bot API"],
 		status: "Completed",
-		repositoryUrl: "https://github.com/bothamlet/todays-brief",
+		repositoryUrl: "https://github.com/bothamlet/todays-brief-stable",
 		image: "/images/projects/todays-brief-card.webp",
 		imageAlt:
 			"Today's Brief - six section markers, one filled, above the TODAY'S BRIEF wordmark",
@@ -160,7 +160,7 @@ const allProjects: Project[] = [
 		type: "Mobile Development",
 		stack: ["Kotlin", "Jetpack Compose", "Room", "SQLCipher"],
 		status: "Paused",
-		repositoryUrl: "https://github.com/bothamlet/chap-android",
+		repositoryUrl: "https://github.com/bothamlet/chap-stable",
 		image: "/chap-card-full.webp",
 		cardImage: "/chap-card.webp",
 		ogImage: "/og/chap-card-full.png",
@@ -208,7 +208,7 @@ const allProjects: Project[] = [
 		type: "Web Design & Engineering",
 		stack: ["Next.js", "React", "TypeScript", "Tailwind CSS"],
 		status: "Completed",
-		repositoryUrl: "https://github.com/bothamlet/jukdata-site",
+		repositoryUrl: "https://github.com/bothamlet/jukdata-stable",
 		image: "/jukdata-card.webp",
 		ogImage: "/og/jukdata-card.png",
 		ogImageAlt:
