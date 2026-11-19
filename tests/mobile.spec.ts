@@ -1589,7 +1589,7 @@ const withoutViewTransitions = (page: Page) =>
     Object.defineProperty(document, 'startViewTransition', { configurable: true, value: undefined });
   });
 
-const firstProjectCard = (page: Page) => page.locator('a.selected-work__link').first();
+const firstProjectCard = (page: Page) => page.locator('a.selected-work__link[href^="/projects/"]').first();
 
 test.describe('exit-animation fallback without View Transitions', () => {
   test.use({ reducedMotion: 'no-preference' });
