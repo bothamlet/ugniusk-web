@@ -56,8 +56,8 @@ const allProjects: Project[] = [
 		slug: "todays-brief",
 		year: "2026",
 		summary:
-			"A personalised newspaper, assembled automatically every morning.",
-		label: "Personalised Daily Newspaper",
+			"A personalized newspaper, assembled automatically every morning.",
+		label: "Personalized Daily Newspaper",
 		type: "Information Systems & Automation",
 		stack: ["Python", "SQLite", "Telegram Bot API"],
 		status: "Completed",
@@ -166,14 +166,14 @@ const allProjects: Project[] = [
 		ogImage: "/og/chap-card-full.png",
 		ogImageAlt:
 			"Chap - the Chap wordmark and purple dot beside a partly cropped phone showing an empty envelope dashboard",
-		imageAlt: "Chap - the app logo beside an iPhone showing an empty envelope dashboard",
+		imageAlt: "Chap - the app logo beside a phone showing an empty envelope dashboard",
 		gallery: [
 			"/chap-card-full.webp",
 			"/images/projects/chap-2.webp",
 			"/images/projects/chap-3.webp",
 		],
 		galleryAlt: [
-			"Chap - the app logo beside an iPhone showing an empty envelope dashboard",
+			"Chap - the app logo beside a phone showing an empty envelope dashboard",
 			"Chap - the all-caught-up screen beside the line Keep your money tidy",
 			"Chap - the settings menu beside the line Stay in control",
 		],
@@ -250,45 +250,6 @@ const allProjects: Project[] = [
 		],
 	},
 	{
-		code: "UG-004",
-		title: "Inner Council",
-		slug: "inner-council",
-		year: "2026",
-		summary:
-			"A private, local AI council - five personas built to argue, judge, and question one person. Fully offline, grounded in the literature that shapes each voice.",
-		label: "Offline AI Council",
-		type: "AI Engineering",
-		stack: ["Python", "Gemma 4", "ChromaDB", "KoboldCPP"],
-		status: "Active",
-		hidden: true,
-		image: "/images/projects/inner-council-card.webp",
-		imageAlt: "Inner Council - a dark card listing the five voices: General, Moralist, Philosopher, Muse, and Old Man",
-		technical:
-			"Before the voices speak, a low-temperature Archivist call classifies the message, extracts what was actually said, and writes a retrieval query per voice; those queries pull grounding passages from an indexed corpus of Nietzsche, Marcus Aurelius, Plato, Wittgenstein, and Chekhov. Each voice answers with a strict persona prompt, its own temperature, and an [src]/[own] citation marker, so the council can only quote what it actually read.",
-		reflection:
-			"The council was built to see one person clearly - five voices, each with a bookcase and an opinion, all of them local and all of them private.",
-		reflectionTitle: "Five voices, one mirror",
-		reflectionBody:
-			"Inner Council started as a way to gain perspective on myself - not through advice, but through being seen. Each voice was formed by the books behind it: the General tracks commitments against Marcus Aurelius, the Moralist delivers verdicts with Nietzsche's weight, the Philosopher presses assumptions in Plato's and Wittgenstein's register, and the Old Man speaks in Chekhov's quiet observations. The Archivist decides who needs to hear what. Nothing is cloud-based, nothing is shared - the whole system runs on my machine, which makes it the most honest thing I've built. It argues about me, not to anyone else.",
-		sections: [
-			{
-				label: "Overview",
-				body:
-					"<strong>Inner Council</strong> is a personal AI experiment: five voices - a <strong>General</strong> who tracks commitments, a <strong>Moralist</strong> who delivers verdicts, a <strong>Philosopher</strong> who destabilizes assumptions, a <strong>Muse</strong> who paints feelings into images, and an <strong>Old Man</strong> who notices patterns. An <strong>Archivist</strong> layer reads each message, decides who needs to hear what, and fetches grounding passages before the voices answer. The whole thing runs <strong>fully local</strong> - a private council that argues about you, not to anyone else.",
-			},
-			{
-				label: "Key features",
-				body:
-					"Five strict personas, each with its own system prompt, temperature, and output budget. <strong>Archivist orchestration</strong> - message classification, extraction, and per-voice retrieval queries. <strong>ChromaDB retrieval</strong> grounded in an indexed corpus of philosophy and literature. <strong>Citation markers</strong> ([src]/[own]) so the council only quotes what it read. Runs <strong>entirely offline</strong> on a local LLM.",
-			},
-			{
-				label: "Technical",
-				body:
-					"Built in Python against KoboldCPP's generate API, model-agnostic by design - any GGUF-compatible model can sit behind it, currently running Gemma 4 locally on port 5001. ChromaDB handles retrieval with MiniLM sentence embeddings, structured-output parsing runs the Archivist, and turn-format prompts have their thinking blocks stripped before a response is shown.",
-			},
-		],
-	},
-	{
 		code: "UG-005",
 		title: "Surface Runoff Model",
 		slug: "surface-runoff",
@@ -304,7 +265,7 @@ const allProjects: Project[] = [
 			"Surface Runoff Model - simulated water depth spreading across a digital elevation grid",
 		ogImage: "/og/surface-runoff-card.png",
 		ogImageAlt:
-			"Surface Runoff Model - a 3D plot of water depth on the terrain at t=4.50 min, with labelled X, Y and height axes, a water-depth colour scale and a terrain note",
+			"Surface Runoff Model - a 3D plot of water depth on the terrain at t=4.50 min, with labeled X, Y and height axes, a water-depth color scale and a terrain note",
 		gallery: [
 			"/images/projects/surface-runoff-rain-storm.webp",
 			"/images/projects/surface-runoff-water-depth.webp",

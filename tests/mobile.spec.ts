@@ -317,7 +317,7 @@ test('desktop hero retains its original two-line treatment', async ({ page }) =>
 const socialProfiles = {
   GitHub: 'https://github.com/bothamlet',
   LinkedIn: 'https://www.linkedin.com/in/ugniusk/',
-  Instagram: 'https://www.instagram.com/lieputis_berzas?vrfl=amtkYmlmNDNvOGxn',
+  Instagram: 'https://www.instagram.com/lieputis_berzas',
 };
 
 test('hero, footer and project footer link to the supplied profiles', async ({ page }) => {
@@ -631,7 +631,7 @@ const socialCards: Record<string, { file: string; image: string; alt: string }> 
   '/projects/surface-runoff/': {
     file: '/projects/surface-runoff/index.html',
     image: '/og/surface-runoff-card.png',
-    alt: 'Surface Runoff Model - a 3D plot of water depth on the terrain at t=4.50 min, with labelled X, Y and height axes, a water-depth colour scale and a terrain note',
+    alt: 'Surface Runoff Model - a 3D plot of water depth on the terrain at t=4.50 min, with labeled X, Y and height axes, a water-depth color scale and a terrain note',
   },
 };
 

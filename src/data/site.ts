@@ -6,6 +6,6 @@ export const site = {
   socials: [
     { label: 'GitHub', href: 'https://github.com/bothamlet' },
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/ugniusk/' },
-    { label: 'Instagram', href: 'https://www.instagram.com/lieputis_berzas?vrfl=amtkYmlmNDNvOGxn' },
+    { label: 'Instagram', href: 'https://www.instagram.com/lieputis_berzas' },
   ],
 } as const;
