@@ -39,17 +39,14 @@ export interface Project {
 	}[];
 }
 
-/**
- * A Selected Work card. Cards need far less than a full project page, so the
- * card view of the shipped projects can sit beside a planned entry that has no
- * page, screenshots, or editorial behind it.
- */
+/** Homepage cards can link to a case study or an external project. */
 export type SelectedWorkCard = Pick<
 	Project,
 	"title" | "slug" | "year" | "label" | "image" | "cardImage" | "imageAlt"
 > & {
 	/** Shown as an italic note at the end of the name row; the card has no link. */
 	planned?: boolean;
+	githubUrl?: string;
 };
 
 const allProjects: Project[] = [
@@ -347,10 +344,7 @@ const allProjects: Project[] = [
 
 export const projects = allProjects.filter((project) => !project.hidden);
 
-// Diucon and Horseflight are planned, not shipped, so they have no page or
-// editorial: they lead Selected Work as card-only entries. Detail routes, the
-// sitemap and More Works read `projects`, which stays at the five shipped
-// projects.
+// Diucon and Horseflight are homepage-only cards, not local case studies.
 export const selectedWork: SelectedWorkCard[] = [
 	{
 		title: "diucon",
@@ -370,7 +364,7 @@ export const selectedWork: SelectedWorkCard[] = [
 		image: "/images/projects/horseflight-card.webp",
 		imageAlt:
 			"Horseflight - the cream knight mark above the Horseflight wordmark on a navy field",
-		planned: true,
+		githubUrl: "https://github.com/bothamlet/horseflight-stable",
 	},
 	...projects,
 ];

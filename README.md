@@ -55,10 +55,8 @@ affect rendering:
 
 - `hidden: true` keeps an entry in the data but excludes it from listings, page generation and the
   sitemap. `sections[].label` is a `SectionLabel` union; an unknown label fails `astro check`.
-- The homepage grid reads `selectedWork`, not `projects`: the planned cards (diucon and Horseflight)
-  lead, then the shipped projects follow. A planned entry has `planned: true` and only the card
-  fields - it renders as a card with a `Planned` note, no link and no focus stop, so it needs no
-  page, gallery or `sections`.
+- The homepage grid reads `selectedWork`. Diucon is marked `planned: true` and has no link.
+  Horseflight uses `githubUrl` to link directly to its repository. Neither needs a local project page.
 
 ## Notes
 

@@ -17,20 +17,20 @@ const { cards } = Astro.props;
   <div class="selected-work__grid">
     {
       cards.map((card) => {
-        // A planned entry has no project page, so it renders as a plain div: no
-        // href and no focus stop, while keeping the shared card hover effect.
-        const Card = card.planned ? 'div' : 'a';
+        const href = card.planned ? undefined : card.githubUrl ?? `/projects/${card.slug}/`;
+        const Card = href ? 'a' : 'div';
+        const status = card.planned ? 'Planned' : card.githubUrl ? 'Available on GitHub' : undefined;
         return (
           <article class:list={["selected-work__item", card.planned && "selected-work__item--planned"]}>
             <Card
-              class:list={["selected-work__link", !card.planned && "cursor-hover"]}
-              href={card.planned ? undefined : `/projects/${card.slug}/`}
+              class:list={["selected-work__link", href && "cursor-hover"]}
+              href={href}
             >
               <ProjectCardVisual project={card} />
               <span class="selected-work__meta">
                 <span class="selected-work__name-row">
                   <strong class="selected-work__name" data-scramble="scroll">{card.title}</strong>
-                  {card.planned && <em class="selected-work__planned">Planned</em>}
+                  {status && <em class="selected-work__status">{status}</em>}
                 </span>
                 <span class="selected-work__label-row">
                   <span class="selected-work__descriptor">{card.label}</span>
@@ -204,7 +204,7 @@ const { cards } = Astro.props;
   }
 
   .selected-work__year,
-  .selected-work__planned {
+  .selected-work__status {
     flex-shrink: 0;
     /* Pushed to the end of the row, then inset from the card edge. */
     margin-left: auto;
@@ -217,7 +217,7 @@ const { cards } = Astro.props;
     white-space: nowrap;
   }
 
-  .selected-work__planned {
+  .selected-work__status {
     /* The row is baseline-aligned for the title; the mono tag would hang below
        the display-size name, so it centres on the name instead. The 4px lift
        is optical: a mathematically centred small tag reads slightly low beside
@@ -234,7 +234,7 @@ const { cards } = Astro.props;
   @media (min-width: 1200px) {
     .selected-work__descriptor,
     .selected-work__year,
-    .selected-work__planned {
+    .selected-work__status {
       font-family: var(--font-mono-desktop);
       letter-spacing: normal;
     }

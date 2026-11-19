@@ -1013,8 +1013,7 @@ test('JUKdata skips its technology strip between Overview and Technical', async 
   }
 });
 
-// Planned cards lead Selected Work: card-only entries with no page, route or
-// More Works slot.
+// Homepage-only cards don't get a local detail page or a More Works slot.
 const plannedCards = [
   {
     title: 'diucon',
@@ -1026,17 +1025,16 @@ const plannedCards = [
       '/images/projects/diucon-card-1600.webp',
     ],
   },
-  {
-    title: 'Horseflight',
-    label: 'Chess Engine',
-    year: '2026',
-    image: '/images/projects/horseflight-card.webp',
-    variants: [
-      '/images/projects/horseflight-card-800.webp',
-      '/images/projects/horseflight-card-1600.webp',
-    ],
-  },
 ];
+
+const horseflight = {
+  url: 'https://github.com/bothamlet/horseflight-stable',
+  assets: [
+    '/images/projects/horseflight-card.webp',
+    '/images/projects/horseflight-card-800.webp',
+    '/images/projects/horseflight-card-1600.webp',
+  ],
+};
 
 const assertPlannedCard = async (card: Locator, plannedCard: (typeof plannedCards)[number]) => {
   await expect(card).toHaveClass(/selected-work__item--planned/);
@@ -1060,7 +1058,7 @@ const assertPlannedCard = async (card: Locator, plannedCard: (typeof plannedCard
   await expect(year).toHaveText(plannedCard.year);
 
   // 'Planned' is italic, after the name, and right-aligned with the year below.
-  const planned = card.locator('.selected-work__planned');
+  const planned = card.locator('.selected-work__status');
   await expect(planned).toHaveText('Planned');
   expect(await planned.evaluate((element) => getComputedStyle(element).fontStyle)).toBe('italic');
   // IBM Plex Mono ships regular only, so the italic needs local style synthesis.
@@ -1112,27 +1110,35 @@ const assertPlannedCard = async (card: Locator, plannedCard: (typeof plannedCard
 };
 
 for (const width of [320, 390, 1440]) {
-  test(`planned cards lead Selected Work as non-clickable cards at ${width}px`, async ({ page }) => {
+  test(`Selected Work shows Diucon as planned and links Horseflight to GitHub at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
     await page.evaluate(() => document.fonts.ready);
 
     const cards = page.locator('.selected-work__item');
     await expect(cards).toHaveCount(7);
-    await expect(page.locator('a.selected-work__link')).toHaveCount(5);
-    await expect(page.locator('.selected-work__item--planned')).toHaveCount(2);
-    // Diucon leads, Horseflight follows, then the five shipped projects.
-    await expect(cards.nth(0).locator('.selected-work__name')).toHaveText('diucon');
-    await expect(cards.nth(1).locator('.selected-work__name')).toHaveText('Horseflight');
+    await expect(page.locator('a.selected-work__link')).toHaveCount(6);
+    await expect(page.locator('.selected-work__item--planned')).toHaveCount(1);
+    const githubCard = cards.nth(1);
+    const link = githubCard.getByRole('link', { name: /Horseflight.*Available on GitHub/i });
+    await expect(link).toHaveAttribute('href', horseflight.url);
+    await expect(githubCard.locator('.selected-work__status')).toHaveText('Available on GitHub');
+    const [nameBox, statusBox, cardBox] = await Promise.all([
+      githubCard.locator('.selected-work__name').boundingBox(),
+      githubCard.locator('.selected-work__status').boundingBox(),
+      githubCard.boundingBox(),
+    ]);
+    expect(statusBox!.x).toBeGreaterThanOrEqual(nameBox!.x + nameBox!.width);
+    expect(statusBox!.x + statusBox!.width).toBeLessThanOrEqual(cardBox!.x + cardBox!.width);
     await expect(cards.nth(2).locator('.selected-work__name')).toHaveText("Today's Brief");
 
     for (const [index, plannedCard] of plannedCards.entries()) {
       await assertPlannedCard(cards.nth(index), plannedCard);
     }
 
-    // The five shipped cards keep the shared two-line descriptor clamp.
+    // Linked cards keep the shared two-line descriptor clamp.
     const shipped = page.locator('.selected-work__item:not(.selected-work__item--planned) .selected-work__descriptor');
-    await expect(shipped).toHaveCount(5);
+    await expect(shipped).toHaveCount(6);
     const shippedClamps = await shipped.evaluateAll(elements =>
       elements.map(element => getComputedStyle(element).webkitLineClamp));
     for (const lineClamp of shippedClamps) {
@@ -1176,7 +1182,8 @@ test('Selected Work subtext and year step down to 95% with a tighter row gap', a
           name: size('.selected-work__name'),
           descriptor: size('.selected-work__descriptor'),
           year: size('.selected-work__year'),
-          planned: size('.selected-work__planned'),
+          status: size('.selected-work__status'),
+          planned: item.classList.contains('selected-work__item--planned'),
           rowGap: parseFloat(getComputedStyle(meta).rowGap),
           labelRowMarginTop: parseFloat(getComputedStyle(item.querySelector('.selected-work__label-row')!).marginTop),
           descriptorLetterSpacing: getComputedStyle(label).letterSpacing,
@@ -1195,10 +1202,10 @@ test('Selected Work subtext and year step down to 95% with a tighter row gap', a
     for (const card of cards) {
       expect(card.name, `${card.title} name ${where}`).toBeCloseTo(name, 2);
       expect(card.descriptor, `${card.title} descriptor ${where}`).toBeCloseTo(descriptor, 2);
-      // The year and the planned tag keep one size, both 95% of 0.95rem.
+      // The year and the status tag share one size.
       expect(card.year, `${card.title} year ${where}`).toBeCloseTo(14.44, 2);
-      if (card.planned !== null) {
-        expect(card.planned, `${card.title} planned ${where}`).toBeCloseTo(14.44, 2);
+      if (card.status !== null) {
+        expect(card.status, `${card.title} status ${where}`).toBeCloseTo(14.44, 2);
       }
       // The label and year rows close up against the name row.
       expect(card.rowGap, `${card.title} row gap ${where}`).toBeCloseTo(1.6, 2);
@@ -1209,7 +1216,7 @@ test('Selected Work subtext and year step down to 95% with a tighter row gap', a
         .toBeCloseTo(card.descriptor! * -0.025, 2);
       // The planned descriptors are the longest strings on the cards and carry
       // no clamp: at every width the smaller type still shows all of the copy.
-      if (card.planned !== null) {
+      if (card.planned) {
         expect(card.labelOverflow.scrollHeight, `${card.title} label height ${where}`)
           .toBeLessThanOrEqual(card.labelOverflow.clientHeight + 1);
         expect(card.labelOverflow.scrollWidth, `${card.title} label width ${where}`)
@@ -1254,28 +1261,28 @@ test('planned cards share the card hover effect without being clickable', async 
   await expectHoverState(linkedCard);
 });
 
-test('planned cards serve their assets and stay out of routes, the sitemap and More Works', async ({ page }) => {
-  for (const plannedCard of plannedCards) {
-    for (const url of [plannedCard.image, ...plannedCard.variants]) {
-      expect((await page.request.get(url)).status(), url).toBe(200);
-    }
-    // No detail page was generated for the planned cards.
-    const route = `/projects/${plannedCard.title.toLowerCase()}/`;
+test('homepage-only cards serve their assets without local routes or sitemap entries', async ({ page }) => {
+  const assets = [...plannedCards.flatMap(card => [card.image, ...card.variants]), ...horseflight.assets];
+  for (const url of assets) {
+    expect((await page.request.get(url)).status(), url).toBe(200);
+  }
+  for (const route of ['/projects/diucon/', '/projects/horseflight/']) {
     expect((await page.request.get(route)).status(), route).toBe(404);
   }
 
-  // The built sitemap lists the five shipped projects and no planned card.
+  // Only local case studies appear in the sitemap.
   const sitemap = readFileSync(new URL('../dist/sitemap-0.xml', import.meta.url), 'utf8');
   expect(sitemap).toContain('/projects/todays-brief/');
   expect(sitemap).toContain('/projects/surface-runoff/');
   expect(sitemap).not.toMatch(/diucon|horseflight/i);
 
-  // The homepage carries the card copy but never a link to a planned route.
+  // Horseflight links directly to GitHub, not a local route.
   const home = await (await page.request.get('/')).text();
   expect(home).toContain('diucon');
   expect(home).toContain('Horseflight');
   expect(home).not.toMatch(/href="\/projects\/(?:diucon|horseflight)/i);
-  expect(home.match(/class="selected-work__item selected-work__item--planned"/g)).toHaveLength(2);
+  expect(home).toContain(`href="${horseflight.url}"`);
+  expect(home.match(/class="selected-work__item selected-work__item--planned"/g)).toHaveLength(1);
 
   // More Works still draws from the shipped projects only.
   await page.goto('/projects/chap/');
